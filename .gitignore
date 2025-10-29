@@ -1,0 +1,157 @@
+# ========================================
+# SECRETS & CREDENTIALS (NEVER COMMIT!)
+# ========================================
+
+# Firebase credentials
+**/google-services.json
+**/GoogleService-Info.plist
+lib/firebase_options.dart
+firebase_options.dart
+
+# API Keys & Environment Variables
+.env
+.env.local
+.env.*.local
+**/.env
+**/secrets.json
+**/api_keys.dart
+lib/core/config/api_keys.dart
+
+# Database credentials
+**/database_config.json
+
+# SSH Keys
+*.pem
+*.key
+id_rsa*
+
+# ========================================
+# FLUTTER & DART
+# ========================================
+
+# Build outputs
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+*.lock
+*.snap
+
+# iOS
+ios/.symlinks/
+ios/Flutter/Flutter.framework
+ios/Flutter/Flutter.podspec
+ios/Pods/
+ios/.generated/
+ios/Runner.xcworkspace
+*.pbxuser
+*.perspectivev3
+*.xcworkspace
+*.xcuserstate
+
+# Android
+android/.gradle
+android/captures/
+android/local.properties
+android/app/debug
+android/app/profile
+android/app/release
+*.jks
+*.keystore
+gradle-wrapper.jar
+.gradle/
+captures/
+GeneratedPluginRegistrant.java
+
+# Web
+web/
+
+# ========================================
+# IDE & EDITORS
+# ========================================
+
+# VSCode
+.vscode/
+*.code-workspace
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+local.properties
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# ========================================
+# LOGS & TEMP FILES
+# ========================================
+
+*.log
+*.tmp
+*.temp
+flutter_log*.txt
+debug_log*.txt
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ========================================
+# ML MODELS (Too large for Git)
+# ========================================
+
+*.tflite
+*.h5
+*.pb
+*.onnx
+assets/ml_models/*.tflite
+
+# ========================================
+# NODE MODULES (Backend)
+# ========================================
+
+node_modules/
+package-lock.json
+yarn.lock
+
+# ========================================
+# PYTHON (ML/Backend)
+# ========================================
+
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+
+# ========================================
+# DATABASE FILES
+# ========================================
+
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# ========================================
+# MISC
+# ========================================
+
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+.coverage
+coverage/
+.nyc_output/

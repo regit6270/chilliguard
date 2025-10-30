@@ -45,7 +45,7 @@ class _CameraScreenState extends State<CameraScreen> {
                       _useCloudModel = value;
                     });
                   },
-                  activeThumbColor: Colors.green,
+                  activeTrackColor: Colors.green,
                 ),
               ],
             ),

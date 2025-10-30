@@ -4,7 +4,7 @@ import 'package:injectable/injectable.dart'; // ADD THIS
 
 import '../../../core/services/user_service.dart'; // ✅ ADD THIS
 import '../../../core/utils/app_logger.dart';
-import '../../../data/models/user_local_model.dart'; // ✅ ADD THIS
+
 import 'auth_event.dart';
 import 'auth_state.dart';
 

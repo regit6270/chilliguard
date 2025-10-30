@@ -34,7 +34,16 @@ void main() async {
     // ✅ Step 3: Initialize Hive
     AppLogger.info('💾 Initializing Hive...');
     await Hive.initFlutter();
-    AppLogger.info('✅ Hive initialized');
+
+// ✅ Open boxes (NO ADAPTERS NEEDED - using Map storage)
+    await Hive.openBox('users');
+    await Hive.openBox('settings');
+    await Hive.openBox('app_cache');
+
+    final userBox = Hive.box('users');
+    AppLogger.info('✅ Hive initialized successfully');
+    AppLogger.info('   - Users cached: ${userBox.length}');
+    AppLogger.info('   - Boxes opened: users, settings, app_cache');
 
     // ✅ Step 4: Initialize Dependency Injection
     AppLogger.info('💉 Configuring dependencies...');

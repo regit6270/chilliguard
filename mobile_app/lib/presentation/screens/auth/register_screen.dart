@@ -1,8 +1,8 @@
-import 'package:chilliguard/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/utils/app_logger.dart';
 import '../../blocs/auth/auth_bloc.dart';
 import '../../blocs/auth/auth_event.dart';
 import '../../blocs/auth/auth_state.dart';
@@ -39,6 +39,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
+      AppLogger.info('📝 Attempting registration: ${_emailController.text}');
       context.read<AuthBloc>().add(
             RegisterUser(
               name: _nameController.text.trim(),
@@ -52,9 +53,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!; // ignore: unused_local_variable
-    final isHindi = Localizations.localeOf(context).languageCode == 'hi';
-
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
@@ -65,12 +63,45 @@ class _RegisterScreenState extends State<RegisterScreen> {
           }
 
           if (state is AuthAuthenticated) {
-            context.go('/');
+            AppLogger.info('✅ Registration successful: ${state.userName}');
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('✅ Registration successful! Welcome!'),
+                backgroundColor: Colors.green,
+                duration: Duration(seconds: 2),
+              ),
+            );
+            Future.delayed(const Duration(seconds: 1), () {
+              context.go('/');
+            });
           } else if (state is AuthError) {
+            AppLogger.error('❌ Registration error: ${state.message}');
+
+            // Show user-friendly error messages
+            String errorMessage = state.message;
+            if (state.message.contains('email-already-in-use')) {
+              errorMessage =
+                  '❌ Email already registered. Please login instead.';
+            } else if (state.message.contains('weak-password')) {
+              errorMessage =
+                  '❌ Password is too weak. Use at least 6 characters.';
+            } else if (state.message.contains('invalid-email')) {
+              errorMessage =
+                  '❌ Invalid email format. Please check and try again.';
+            }
+
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(state.message),
+                content: Text(errorMessage),
                 backgroundColor: Colors.red,
+                duration: const Duration(seconds: 5),
+                action: state.message.contains('email-already-in-use')
+                    ? SnackBarAction(
+                        label: 'Login',
+                        textColor: Colors.white,
+                        onPressed: () => context.pop(),
+                      )
+                    : null,
               ),
             );
           }
@@ -92,18 +123,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   const SizedBox(height: 20),
 
                   // Title
-                  Text(
-                    isHindi ? 'खाता बनाएं' : 'Create Account',
-                    style: const TextStyle(
+                  const Text(
+                    'Create Account',
+                    style: TextStyle(
                       fontSize: 32,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    isHindi
-                        ? 'शुरू करने के लिए अपना विवरण दर्ज करें'
-                        : 'Enter your details to get started',
+                    'Enter your details to get started',
                     style: TextStyle(
                       fontSize: 16,
                       color: Colors.grey[600],
@@ -115,17 +144,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Name field
                   AuthTextField(
                     controller: _nameController,
-                    label: isHindi ? 'पूरा नाम' : 'Full Name',
-                    hint: isHindi ? 'अपना नाम दर्ज करें' : 'Enter your name',
+                    label: 'Full Name',
+                    hint: 'Enter your name',
                     prefixIcon: Icons.person,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return isHindi ? 'नाम दर्ज करें' : 'Enter name';
+                        return 'Enter your name';
                       }
                       if (value.length < 3) {
-                        return isHindi
-                            ? 'नाम कम से कम 3 अक्षर का होना चाहिए'
-                            : 'Name must be at least 3 characters';
+                        return 'Name must be at least 3 characters';
                       }
                       return null;
                     },
@@ -136,21 +163,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Phone field
                   AuthTextField(
                     controller: _phoneController,
-                    label: isHindi ? 'फोन नंबर' : 'Phone Number',
+                    label: 'Phone Number',
                     hint: '9876543210',
                     prefixIcon: Icons.phone,
                     keyboardType: TextInputType.phone,
                     maxLength: 10,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return isHindi
-                            ? 'फोन नंबर दर्ज करें'
-                            : 'Enter phone number';
+                        return 'Enter phone number';
                       }
                       if (value.length != 10) {
-                        return isHindi
-                            ? 'मान्य फोन नंबर दर्ज करें'
-                            : 'Enter valid phone number';
+                        return 'Enter valid 10-digit phone number';
+                      }
+                      if (!RegExp(r'^[6-9]\d{9}$').hasMatch(value)) {
+                        return 'Enter valid Indian mobile number';
                       }
                       return null;
                     },
@@ -161,18 +187,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Email field
                   AuthTextField(
                     controller: _emailController,
-                    label: isHindi ? 'ईमेल' : 'Email',
+                    label: 'Email',
                     hint: 'farmer@example.com',
                     prefixIcon: Icons.email,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return isHindi ? 'ईमेल दर्ज करें' : 'Enter email';
+                        return 'Enter email address';
                       }
-                      if (!value.contains('@') || !value.contains('.')) {
-                        return isHindi
-                            ? 'मान्य ईमेल दर्ज करें'
-                            : 'Enter valid email';
+                      if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$')
+                          .hasMatch(value)) {
+                        return 'Enter valid email address';
                       }
                       return null;
                     },
@@ -183,8 +208,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Password field
                   AuthTextField(
                     controller: _passwordController,
-                    label: isHindi ? 'पासवर्ड' : 'Password',
-                    hint: isHindi ? 'पासवर्ड दर्ज करें' : 'Enter password',
+                    label: 'Password',
+                    hint: 'Enter password',
                     prefixIcon: Icons.lock,
                     obscureText: _obscurePassword,
                     suffixIcon: IconButton(
@@ -199,12 +224,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return isHindi ? 'पासवर्ड दर्ज करें' : 'Enter password';
+                        return 'Enter password';
                       }
                       if (value.length < 6) {
-                        return isHindi
-                            ? 'पासवर्ड कम से कम 6 अक्षर का होना चाहिए'
-                            : 'Password must be at least 6 characters';
+                        return 'Password must be at least 6 characters';
                       }
                       return null;
                     },
@@ -215,11 +238,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   // Confirm password field
                   AuthTextField(
                     controller: _confirmPasswordController,
-                    label:
-                        isHindi ? 'पासवर्ड की पुष्टि करें' : 'Confirm Password',
-                    hint: isHindi
-                        ? 'पासवर्ड फिर से दर्ज करें'
-                        : 'Re-enter password',
+                    label: 'Confirm Password',
+                    hint: 'Re-enter password',
                     prefixIcon: Icons.lock_outline,
                     obscureText: _obscureConfirmPassword,
                     suffixIcon: IconButton(
@@ -235,14 +255,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return isHindi
-                            ? 'पासवर्ड की पुष्टि करें'
-                            : 'Confirm password';
+                        return 'Confirm your password';
                       }
                       if (value != _passwordController.text) {
-                        return isHindi
-                            ? 'पासवर्ड मेल नहीं खाते'
-                            : 'Passwords do not match';
+                        return 'Passwords do not match';
                       }
                       return null;
                     },
@@ -265,9 +281,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 color: Colors.white,
                               ),
                             )
-                          : Text(
-                              isHindi ? 'पंजीकरण करें' : 'Register',
-                              style: const TextStyle(fontSize: 16),
+                          : const Text(
+                              'Register',
+                              style: TextStyle(fontSize: 16),
                             ),
                     ),
                   ),
@@ -279,16 +295,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        isHindi
-                            ? 'पहले से खाता है?'
-                            : 'Already have an account?',
+                        'Already have an account?',
                         style: TextStyle(color: Colors.grey[600]),
                       ),
                       TextButton(
                         onPressed: () => context.pop(),
-                        child: Text(
-                          isHindi ? 'लॉगिन करें' : 'Login',
-                        ),
+                        child: const Text('Login'),
                       ),
                     ],
                   ),

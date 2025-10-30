@@ -49,6 +49,7 @@ import '../network/api_client.dart' as _i557;
 import '../network/network_info.dart' as _i932;
 import '../services/local_storage_service.dart' as _i527;
 import '../services/notification_service.dart' as _i941;
+import '../services/user_service.dart' as _i381;
 
 extension GetItInjectableX on _i174.GetIt {
 // initializes the registration of main-scope dependencies inside of GetIt
@@ -62,6 +63,7 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     gh.singleton<_i64.DatabaseHelper>(() => _i64.DatabaseHelper());
+    gh.lazySingleton<_i381.UserService>(() => _i381.UserService());
     gh.lazySingleton<_i932.NetworkInfo>(
         () => _i932.NetworkInfoImpl(gh<_i895.Connectivity>()));
     gh.lazySingleton<_i941.NotificationService>(() => _i941.NotificationService(
@@ -70,11 +72,14 @@ extension GetItInjectableX on _i174.GetIt {
         ));
     gh.factory<_i273.SensorBloc>(
         () => _i273.SensorBloc(gh<_i119.SensorRepositoryImpl>()));
+    gh.factory<_i141.AuthBloc>(() => _i141.AuthBloc(
+          gh<_i59.FirebaseAuth>(),
+          gh<_i381.UserService>(),
+        ));
     gh.lazySingleton<_i611.AlertLocalDataSource>(
         () => _i611.AlertLocalDataSourceImpl(gh<_i64.DatabaseHelper>()));
     gh.factory<_i905.ConnectivityBloc>(
         () => _i905.ConnectivityBloc(gh<_i895.Connectivity>()));
-    gh.factory<_i141.AuthBloc>(() => _i141.AuthBloc(gh<_i59.FirebaseAuth>()));
     gh.lazySingleton<_i1020.SensorLocalDataSource>(
         () => _i1020.SensorLocalDataSourceImpl(gh<_i64.DatabaseHelper>()));
     gh.lazySingleton<_i25.BatchLocalDataSource>(

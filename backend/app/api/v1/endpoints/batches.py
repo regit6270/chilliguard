@@ -1,18 +1,24 @@
 """Crop batch management API endpoints"""
-from flask import Blueprint, request, jsonify
-from datetime import datetime, date
-from app.core.security import require_auth, get_user_id
-from app.core.database import db
+from __future__ import annotations
+
 import logging
 import uuid
+from datetime import datetime
+from typing import Any, Dict, List, Tuple
+
+from flask import Blueprint, Response, jsonify, request
+
+from app.core.database import db
+from app.core.security import get_user_id, require_auth
 
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('batches', __name__, url_prefix='/batches')
 
-@bp.route('', methods=['GET'])
+
+@bp.route('/', methods=['GET'])
 @require_auth
-def get_batches():
+def get_batches() -> Tuple[Response, int]:
     """Get all crop batches for user"""
     try:
         user_id = get_user_id()
@@ -20,7 +26,7 @@ def get_batches():
         status = request.args.get('status')  # active, harvested, failed
 
         # Build filters
-        filters = [('user_id', '==', user_id)]
+        filters: List[Tuple[str, Any, Any]] = [('user_id', '==', user_id)]
         if field_id:
             filters.append(('field_id', '==', field_id))
         if status:
@@ -38,14 +44,14 @@ def get_batches():
             'total': len(batches)
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting batches: {str(e)}')
         return jsonify({'error': 'Failed to fetch batches'}), 500
 
 
 @bp.route('/<batch_id>', methods=['GET'])
 @require_auth
-def get_batch(batch_id):
+def get_batch(batch_id: str) -> Tuple[Response, int]:
     """Get specific batch details"""
     try:
         user_id = get_user_id()
@@ -59,7 +65,8 @@ def get_batch(batch_id):
             return jsonify({'error': 'Unauthorized'}), 403
 
         # Get additional data
-        field = db.get_document('fields', batch.get('field_id'))
+        field_id_for_batch = batch.get('field_id')
+        field = db.get_document('fields', field_id_for_batch) if isinstance(field_id_for_batch, str) else None
 
         # Get disease detections count
         detections = db.query_collection(
@@ -80,18 +87,18 @@ def get_batch(batch_id):
             'treatments_count': len(treatments)
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting batch: {str(e)}')
         return jsonify({'error': 'Failed to fetch batch'}), 500
 
 
 @bp.route('', methods=['POST'])
 @require_auth
-def create_batch():
+def create_batch() -> Tuple[Response, int]:
     """Create new crop batch"""
     try:
         user_id = get_user_id()
-        data = request.get_json()
+        data: Dict[str, Any] = request.get_json(silent=True) or {}
 
         # Validate required fields
         required = ['field_id', 'crop_type', 'planting_date', 'area']
@@ -119,7 +126,8 @@ def create_batch():
             'updated_at': datetime.utcnow()
         }
 
-        batch_id = db.create_document('crop_batches', batch_data, batch_data['batch_id'])
+        batch_id = db.create_document(
+            'crop_batches', batch_data, batch_data['batch_id'])
 
         return jsonify({
             'success': True,
@@ -127,18 +135,18 @@ def create_batch():
             'message': 'Batch created successfully'
         }), 201
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error creating batch: {str(e)}')
         return jsonify({'error': 'Failed to create batch'}), 500
 
 
 @bp.route('/<batch_id>', methods=['PUT'])
 @require_auth
-def update_batch(batch_id):
+def update_batch(batch_id: str) -> Tuple[Response, int]:
     """Update batch information"""
     try:
         user_id = get_user_id()
-        data = request.get_json()
+        data: Dict[str, Any] = request.get_json(silent=True) or {}
 
         # Verify ownership
         batch = db.get_document('crop_batches', batch_id)
@@ -146,8 +154,13 @@ def update_batch(batch_id):
             return jsonify({'error': 'Unauthorized'}), 403
 
         # Update allowed fields
-        update_data = {}
-        allowed_fields = ['estimated_harvest_date', 'actual_harvest_date', 'status', 'health_score', 'seed_variety']
+        update_data: Dict[str, Any] = {}
+        allowed_fields = [
+            'estimated_harvest_date',
+            'actual_harvest_date',
+            'status',
+            'health_score',
+            'seed_variety']
 
         for field in allowed_fields:
             if field in data:
@@ -162,14 +175,14 @@ def update_batch(batch_id):
             'message': 'Batch updated successfully'
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error updating batch: {str(e)}')
         return jsonify({'error': 'Failed to update batch'}), 500
 
 
 @bp.route('/<batch_id>/timeline', methods=['GET'])
 @require_auth
-def get_batch_timeline(batch_id):
+def get_batch_timeline(batch_id: str) -> Tuple[Response, int]:
     """Get timeline of events for a batch"""
     try:
         user_id = get_user_id()
@@ -180,13 +193,16 @@ def get_batch_timeline(batch_id):
             return jsonify({'error': 'Unauthorized'}), 403
 
         # Get all events
-        timeline = []
+        timeline: List[Dict[str, Any]] = []
 
         # Add planting event
         timeline.append({
             'type': 'planting',
             'date': batch.get('planting_date'),
-            'description': f"Planted {batch.get('crop_type')} - {batch.get('seed_variety', 'Unknown variety')}"
+            'description': (
+                f"Planted {batch.get('crop_type')} - "
+                f"{batch.get('seed_variety', 'Unknown variety')}"
+            )
         })
 
         # Get disease detections
@@ -234,6 +250,6 @@ def get_batch_timeline(batch_id):
             'total_events': len(timeline)
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting batch timeline: {str(e)}')
         return jsonify({'error': 'Failed to fetch timeline'}), 500

@@ -67,10 +67,16 @@ dependencies:
   # Local Notifications
   flutter_local_notifications: ^17.0.0
 
+  # Firebase Realtime Database
+  #firebase_database: ^10.4.9 # For Realtime Database
+
   # Utils
   intl: ^0.20.0
+  geolocator: ^10.1.0             # For location services
+  geocoding: ^2.1.1               # For reverse geocoding (location → address)
   uuid: ^4.2.1
   path: ^1.8.3  # Add this line
+  provider: ^6.0.0    # ← For state management
   path_provider: ^2.1.1
   permission_handler: ^11.0.1
   url_launcher: ^6.2.1
@@ -85,6 +91,7 @@ dependencies:
   freezed_annotation: ^2.4.1
   json_annotation: ^4.8.1
   dartz: ^0.10.1
+  http_parser: ^4.1.2
 
 dev_dependencies:
   flutter_test:

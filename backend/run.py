@@ -1,8 +1,9 @@
 """
 ChilliGuard Backend Server Entry Point
 """
-from app import create_app
 import logging
+from app import create_app
+
 
 # Configure logging
 logging.basicConfig(

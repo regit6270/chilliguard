@@ -1,6 +1,9 @@
 """Disease data model"""
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Any, Dict, List, Optional
+
 
 class Disease:
     """Disease model for plant disease information"""
@@ -17,8 +20,8 @@ class Disease:
         severity_levels: Optional[Dict[str, str]] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
-        **kwargs
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.disease_id = disease_id
         self.disease_name = disease_name
         self.scientific_name = scientific_name
@@ -53,7 +56,7 @@ class Disease:
         """Create Disease from Firestore document"""
         return Disease(**data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Disease {self.disease_id} - {self.disease_name}>"
 
 
@@ -73,8 +76,8 @@ class DiseaseDetection:
         image_url: Optional[str] = None,
         model_type: str = 'device',  # device or cloud
         timestamp: Optional[datetime] = None,
-        **kwargs
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.detection_id = detection_id
         self.user_id = user_id
         self.field_id = field_id
@@ -111,5 +114,8 @@ class DiseaseDetection:
         """Create DiseaseDetection from Firestore document"""
         return DiseaseDetection(**data)
 
-    def __repr__(self):
-        return f"<DiseaseDetection {self.detection_id} - {self.disease_name} ({self.confidence:.2%})>"
+    def __repr__(self) -> str:
+        return (
+            f"<DiseaseDetection {self.detection_id} - {self.disease_name} "
+            f"({self.confidence:.2%})>"
+        )

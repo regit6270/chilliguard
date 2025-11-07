@@ -58,3 +58,5 @@ class RegisterUser extends AuthEvent {
 class LogoutRequested extends AuthEvent {}
 
 class CheckAuthStatus extends AuthEvent {}
+
+class DemoAutoLogin extends AuthEvent {}

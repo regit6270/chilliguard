@@ -1,17 +1,24 @@
 """User profile API endpoints"""
-from flask import Blueprint, request, jsonify
-from datetime import datetime
-from app.core.security import require_auth, get_user_id
-from app.core.database import db
+from __future__ import annotations
+
 import logging
+from datetime import datetime
+from typing import Any, Dict, Tuple
+
+from flask import Blueprint, Response, jsonify, request
+
+from app.core.database import db
+from app.core.security import get_user_id, require_auth
+
 
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('users', __name__, url_prefix='/users')
 
+
 @bp.route('/profile', methods=['GET'])
 @require_auth
-def get_profile():
+def get_profile() -> Tuple[Response, int]:
     """Get user profile"""
     try:
         user_id = get_user_id()
@@ -22,21 +29,21 @@ def get_profile():
 
         return jsonify(user), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting profile: {str(e)}')
         return jsonify({'error': 'Failed to fetch profile'}), 500
 
 
 @bp.route('/profile', methods=['PUT'])
 @require_auth
-def update_profile():
+def update_profile() -> Tuple[Response, int]:
     """Update user profile"""
     try:
         user_id = get_user_id()
-        data = request.get_json()
+        data: Dict[str, Any] = request.get_json(silent=True) or {}
 
         # Update allowed fields
-        update_data = {}
+        update_data: Dict[str, Any] = {}
         allowed_fields = ['name', 'email', 'location', 'fcm_token']
 
         for field in allowed_fields:
@@ -52,6 +59,6 @@ def update_profile():
             'message': 'Profile updated successfully'
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error updating profile: {str(e)}')
         return jsonify({'error': 'Failed to update profile'}), 500

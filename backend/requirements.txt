@@ -9,6 +9,10 @@ google-cloud-firestore==2.14.0
 google-cloud-storage==2.14.0
 google-cloud-aiplatform==1.38.0
 
+
+firebase-admin>=6.0.0
+
+
 # API & Validation
 pydantic==2.5.2
 pydantic-settings==2.1.0

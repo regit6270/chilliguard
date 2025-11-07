@@ -4,7 +4,6 @@ import 'package:injectable/injectable.dart'; // ADD THIS
 
 import '../../../core/services/user_service.dart'; // ✅ ADD THIS
 import '../../../core/utils/app_logger.dart';
-import '../../../data/models/user_local_model.dart'; // ✅ ADD THIS
 import 'auth_event.dart';
 import 'auth_state.dart';
 
@@ -21,6 +20,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     on<RegisterUser>(_onRegisterUser);
     on<LogoutRequested>(_onLogoutRequested);
     on<CheckAuthStatus>(_onCheckAuthStatus);
+    on<DemoAutoLogin>(_onDemoAutoLogin);
+
     //_userService = UserService(); // ✅ ADD THIS
   }
 
@@ -268,5 +269,77 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     add(AuthCheckRequested());
+  }
+
+  Future<void> _onDemoAutoLogin(
+    DemoAutoLogin event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(AuthLoading());
+    try {
+      // Demo credentials
+      const String demoEmail = 'demo@chiliguard.com';
+      const String demoPassword = 'DemoChilli@2025';
+
+      final userCredential = await _firebaseAuth.signInWithEmailAndPassword(
+        email: demoEmail,
+        password: demoPassword,
+      );
+
+      final user = userCredential.user;
+      if (user != null) {
+        // Save to local storage
+        await _userService.saveUserFromFirebase(user);
+
+        emit(AuthAuthenticated(
+          userId: user.uid,
+          userName: user.displayName ?? 'Demo Farmer',
+          userEmail: user.email ?? demoEmail,
+        ));
+
+        AppLogger.info('✅ Demo auto-login successful: ${user.email}');
+      } else {
+        emit(const AuthError('Demo login failed'));
+      }
+    } on FirebaseAuthException catch (e) {
+      AppLogger.error('Demo auto-login error', e);
+
+      // If user doesn't exist, create it
+      if (e.code == 'user-not-found') {
+        try {
+          const String demoEmail = 'demo@chiliguard.com';
+          const String demoPassword = 'DemoChilli@2025';
+
+          final userCredential =
+              await _firebaseAuth.createUserWithEmailAndPassword(
+            email: demoEmail,
+            password: demoPassword,
+          );
+
+          await userCredential.user?.updateDisplayName('Demo Farmer');
+
+          final user = userCredential.user;
+          if (user != null) {
+            await _userService.saveUserFromFirebase(user);
+
+            emit(AuthAuthenticated(
+              userId: user.uid,
+              userName: 'Demo Farmer',
+              userEmail: demoEmail,
+            ));
+
+            AppLogger.info('✅ Demo user created and logged in: ${user.email}');
+            return;
+          }
+        } catch (createError) {
+          AppLogger.error('Failed to create demo user', createError);
+        }
+      }
+
+      emit(AuthError('Demo login failed: ${e.message}'));
+    } catch (e) {
+      AppLogger.error('Demo auto-login error', e);
+      emit(const AuthError('Demo login failed'));
+    }
   }
 }

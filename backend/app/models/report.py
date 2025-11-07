@@ -1,6 +1,9 @@
 """Report data model"""
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 
 class Report:
     """Report model for end-cycle and analytical reports"""
@@ -15,8 +18,8 @@ class Report:
         pdf_url: Optional[str] = None,
         data: Optional[Dict[str, Any]] = None,
         generated_at: Optional[datetime] = None,
-        **kwargs
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.report_id = report_id
         self.batch_id = batch_id
         self.user_id = user_id
@@ -47,5 +50,5 @@ class Report:
         """Create Report from Firestore document"""
         return Report(**data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Report {self.report_id} - {self.report_type}>"

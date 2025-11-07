@@ -1,0 +1,181 @@
+// import 'package:equatable/equatable.dart';
+
+// /// Unified SensorReading model - supports real + estimated data
+// /// Replaces both sensor_reading_model.dart and old sensor_reading.dart
+// class SensorReading extends Equatable {
+//   // ===== IDENTIFIERS (for Clean Architecture) =====
+//   final String? readingId; // 🆕 For entity compatibility
+//   final String? fieldId; // 🆕 For entity compatibility
+
+//   // ===== REAL SENSOR DATA (from Firebase) =====
+//   final double? temperature; // ✅ From sensor
+//   final double? moisture; // ✅ From sensor (soilMoisturePercent)
+//   final double? humidity; // ✅ From sensor
+//   final int? moistureRaw; // ✅ From sensor (soilMoistureRaw)
+
+//   // ===== NPK VALUES (real or estimated) =====
+//   final double? ph; // ⚠️ Estimated if sensor missing
+//   final double? nitrogen; // ⚠️ Estimated if sensor missing
+//   final double? phosphorus; // ⚠️ Estimated if sensor missing
+//   final double? potassium; // ⚠️ Estimated if sensor missing
+
+//   // ===== METADATA =====
+//   final DateTime timestamp;
+//   final bool isNpkEstimated; // 🆕 Flag for "Estimated" badge
+//   final String? location; // 🆕 Location name
+//   final String? weatherCondition; // 🆕 Weather status
+//   final double? rainfall; // 🆕 Rainfall in mm
+
+//   const SensorReading({
+//     this.readingId,
+//     this.fieldId,
+//     this.temperature,
+//     this.moisture,
+//     this.humidity,
+//     this.moistureRaw,
+//     this.ph,
+//     this.nitrogen,
+//     this.phosphorus,
+//     this.potassium,
+//     required this.timestamp,
+//     this.isNpkEstimated = false,
+//     this.location,
+//     this.weatherCondition,
+//     this.rainfall,
+//   });
+
+//   /// Create from Firebase RTDB (handles missing fields)
+//   factory SensorReading.fromJson(Map<String, dynamic> json) {
+//     return SensorReading(
+//       // IDs (may not exist in Firebase RTDB)
+//       readingId: json['reading_id'] as String?,
+//       fieldId: json['field_id'] as String?,
+
+//       // Real sensor data (map Firebase field names)
+//       temperature: (json['temperature'] as num?)?.toDouble(),
+//       moisture: (json['soilMoisturePercent'] as num?)?.toDouble(),
+//       humidity: (json['humidity'] as num?)?.toDouble(),
+//       moistureRaw: json['soilMoistureRaw'] as int?,
+
+//       // NPK fields (may be null)
+//       ph: (json['ph'] as num?)?.toDouble(),
+//       nitrogen: (json['nitrogen'] as num?)?.toDouble(),
+//       phosphorus: (json['phosphorus'] as num?)?.toDouble(),
+//       potassium: (json['potassium'] as num?)?.toDouble(),
+
+//       // Timestamp (handle both formats)
+//       timestamp: _parseTimestamp(json['timestamp']),
+
+//       // Metadata
+//       isNpkEstimated: json['isNpkEstimated'] as bool? ?? false,
+//       location: json['location'] as String?,
+//       weatherCondition: json['weatherCondition'] as String?,
+//       rainfall: (json['rainfall'] as num?)?.toDouble(),
+//     );
+//   }
+
+//   /// Parse timestamp from multiple formats
+//   static DateTime _parseTimestamp(dynamic timestamp) {
+//     if (timestamp == null) return DateTime.now();
+
+//     if (timestamp is String) {
+//       return DateTime.parse(timestamp);
+//     } else if (timestamp is int) {
+//       // Firebase uses seconds, not milliseconds
+//       return DateTime.fromMillisecondsSinceEpoch(timestamp * 1000);
+//     }
+
+//     return DateTime.now();
+//   }
+
+//   /// Convert to JSON for storage
+//   Map<String, dynamic> toJson() {
+//     return {
+//       if (readingId != null) 'reading_id': readingId,
+//       if (fieldId != null) 'field_id': fieldId,
+//       'temperature': temperature,
+//       'soilMoisturePercent': moisture,
+//       'humidity': humidity,
+//       'soilMoistureRaw': moistureRaw,
+//       'ph': ph,
+//       'nitrogen': nitrogen,
+//       'phosphorus': phosphorus,
+//       'potassium': potassium,
+//       'timestamp': timestamp.millisecondsSinceEpoch ~/ 1000,
+//       'isNpkEstimated': isNpkEstimated,
+//       if (location != null) 'location': location,
+//       if (weatherCondition != null) 'weatherCondition': weatherCondition,
+//       if (rainfall != null) 'rainfall': rainfall,
+//     };
+//   }
+
+//   /// Create a copy with updated fields
+//   SensorReading copyWith({
+//     String? readingId,
+//     String? fieldId,
+//     double? temperature,
+//     double? moisture,
+//     double? humidity,
+//     int? moistureRaw,
+//     double? ph,
+//     double? nitrogen,
+//     double? phosphorus,
+//     double? potassium,
+//     DateTime? timestamp,
+//     bool? isNpkEstimated,
+//     String? location,
+//     String? weatherCondition,
+//     double? rainfall,
+//   }) {
+//     return SensorReading(
+//       readingId: readingId ?? this.readingId,
+//       fieldId: fieldId ?? this.fieldId,
+//       temperature: temperature ?? this.temperature,
+//       moisture: moisture ?? this.moisture,
+//       humidity: humidity ?? this.humidity,
+//       moistureRaw: moistureRaw ?? this.moistureRaw,
+//       ph: ph ?? this.ph,
+//       nitrogen: nitrogen ?? this.nitrogen,
+//       phosphorus: phosphorus ?? this.phosphorus,
+//       potassium: potassium ?? this.potassium,
+//       timestamp: timestamp ?? this.timestamp,
+//       isNpkEstimated: isNpkEstimated ?? this.isNpkEstimated,
+//       location: location ?? this.location,
+//       weatherCondition: weatherCondition ?? this.weatherCondition,
+//       rainfall: rainfall ?? this.rainfall,
+//     );
+//   }
+
+//   /// Validate if sensor data is available
+//   bool get hasRealSensorData =>
+//       temperature != null && moisture != null && humidity != null;
+
+//   /// Validate if NPK data is available
+//   bool get hasNpkData =>
+//       ph != null && nitrogen != null && phosphorus != null && potassium != null;
+
+//   @override
+//   List<Object?> get props => [
+//         readingId,
+//         fieldId,
+//         temperature,
+//         moisture,
+//         humidity,
+//         moistureRaw,
+//         ph,
+//         nitrogen,
+//         phosphorus,
+//         potassium,
+//         timestamp,
+//         isNpkEstimated,
+//         location,
+//         weatherCondition,
+//         rainfall,
+//       ];
+
+//   @override
+//   String toString() {
+//     return 'SensorReading(temp: $temperature°C, moisture: $moisture%, '
+//         'NPK: ${isNpkEstimated ? "Estimated" : "Real"}, location: $location)';
+//   }
+// }

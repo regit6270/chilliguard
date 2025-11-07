@@ -7,12 +7,13 @@ import '../../presentation/screens/auth/phone_verification_screen.dart';
 import '../../presentation/screens/auth/register_screen.dart';
 import '../../presentation/screens/auth/splash_screen.dart';
 import '../../presentation/screens/camera/camera_screen.dart';
-import '../../presentation/screens/camera/disease_result_screen.dart';
+//
 import '../../presentation/screens/crop_management/batch_detail_screen.dart';
 import '../../presentation/screens/crop_management/batch_list_screen.dart';
 import '../../presentation/screens/crop_management/create_batch_screen.dart';
 import '../../presentation/screens/dashboard/dashboard_screen.dart';
 import '../../presentation/screens/dashboard/feasibility_check_screen.dart';
+import '../../presentation/screens/disease/simple_disease_screen.dart';
 import '../../presentation/screens/knowledge_base/article_detail_screen.dart';
 import '../../presentation/screens/knowledge_base/knowledge_base_screen.dart';
 import '../../presentation/screens/profile/add_field_screen.dart';
@@ -22,7 +23,9 @@ import '../../presentation/screens/profile/settings_screen.dart';
 import '../../presentation/screens/reports/batch_comparison_screen.dart';
 import '../../presentation/screens/reports/end_cycle_report_screen.dart';
 import '../../presentation/screens/reports/reports_list_screen.dart';
-//import '../../presentation/screens/soil_health/improvement_recommendations_screen.dart';
+import '../../presentation/screens/soil_health/fertilizer_schedule_input_screen.dart';
+import '../../presentation/screens/soil_health/fertilizer_schedule_result_screen.dart';
+import '../../presentation/screens/soil_health/improvement_recommendations_screen.dart';
 import '../../presentation/screens/soil_health/soil_health_screen.dart';
 
 class AppRouter {
@@ -96,13 +99,19 @@ class AppRouter {
         builder: (context, state) => const CameraScreen(),
       ),
 
+      // GoRoute(
+      //   path: '/disease-result/:detectionId',
+      //   name: 'disease-result',
+      //   builder: (context, state) {
+      //     final detectionId = state.pathParameters['detectionId']!;
+      //     return DiseaseResultScreen(detectionId: detectionId);
+      //   },
+      // ),
+
       GoRoute(
-        path: '/disease-result/:detectionId',
-        name: 'disease-result',
-        builder: (context, state) {
-          final detectionId = state.pathParameters['detectionId']!;
-          return DiseaseResultScreen(detectionId: detectionId);
-        },
+        path: '/disease-detection',
+        name: 'disease-detection',
+        builder: (context, state) => const SimpleDiseaseDetectionScreen(),
       ),
 
       // Soil Health Routes
@@ -110,6 +119,21 @@ class AppRouter {
         path: '/soil-health',
         name: 'soil-health',
         builder: (context, state) => const SoilHealthScreen(),
+      ),
+      GoRoute(
+        path: '/soil-improvement-recommendations',
+        name: 'soil-improvement-recommendations',
+        builder: (context, state) => const ImprovementRecommendationsScreen(),
+      ),
+      GoRoute(
+        path: '/fertilizer-schedule-input',
+        name: 'fertilizer-schedule-input',
+        builder: (context, state) => const FertilizerScheduleInputScreen(),
+      ),
+      GoRoute(
+        path: '/fertilizer-schedule-result',
+        name: 'fertilizer-schedule-result',
+        builder: (context, state) => const FertilizerScheduleResultScreen(),
       ),
 
       // Crop Management Routes

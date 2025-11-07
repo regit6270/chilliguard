@@ -1,21 +1,28 @@
 """Alerts and notifications API endpoints"""
-from flask import Blueprint, request, jsonify
-from app.core.security import require_auth, get_user_id
-from app.services.notification_service import get_user_alerts, acknowledge_alert
-from app.core.database import db
+from __future__ import annotations
+
 import logging
+from typing import Dict, Tuple
+
+from flask import Blueprint, Response, jsonify, request
+
+from app.core.database import db
+from app.core.security import get_user_id, require_auth
+from app.services.notification_service import acknowledge_alert, get_user_alerts
 
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('alerts', __name__, url_prefix='/alerts')
 
+
 @bp.route('', methods=['GET'])
 @require_auth
-def get_alerts():
+def get_alerts() -> Tuple[Response, int]:
     """Get all alerts for user"""
     try:
         user_id = get_user_id()
-        unacknowledged_only = request.args.get('unacknowledged', 'false').lower() == 'true'
+        unacknowledged_only = request.args.get(
+            'unacknowledged', 'false').lower() == 'true'
 
         alerts = get_user_alerts(user_id, unacknowledged_only)
 
@@ -34,14 +41,14 @@ def get_alerts():
             }
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting alerts: {str(e)}')
         return jsonify({'error': 'Failed to fetch alerts'}), 500
 
 
-@bp.route('/<alert_id>/acknowledge', methods='POST'])
+@bp.route('/<alert_id>/acknowledge', methods=['POST'])
 @require_auth
-def acknowledge(alert_id):
+def acknowledge(alert_id: str) -> Tuple[Response, int]:
     """Mark alert as acknowledged"""
     try:
         user_id = get_user_id()
@@ -56,14 +63,14 @@ def acknowledge(alert_id):
             'message': 'Alert acknowledged'
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error acknowledging alert: {str(e)}')
         return jsonify({'error': 'Failed to acknowledge alert'}), 500
 
 
 @bp.route('/statistics', methods=['GET'])
 @require_auth
-def get_statistics():
+def get_statistics() -> Tuple[Response, int]:
     """Get alert statistics for user"""
     try:
         user_id = get_user_id()
@@ -100,8 +107,8 @@ def get_statistics():
         total = len(alerts)
         acknowledged = len([a for a in alerts if a.get('acknowledged')])
 
-        by_severity = {}
-        by_type = {}
+        by_severity: Dict[str, int] = {}
+        by_type: Dict[str, int] = {}
 
         for alert in alerts:
             severity = alert.get('severity', 'unknown')
@@ -119,6 +126,6 @@ def get_statistics():
             'period_days': 30
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting alert statistics: {str(e)}')
         return jsonify({'error': 'Failed to fetch statistics'}), 500

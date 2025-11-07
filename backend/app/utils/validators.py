@@ -4,6 +4,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def validate_sensor_reading(data: Dict[str, Any]) -> tuple[bool, str]:
     """Validate sensor reading data"""
     required_fields = ['field_id', 'device_id']
@@ -29,7 +30,8 @@ def validate_sensor_reading(data: Dict[str, Any]) -> tuple[bool, str]:
             try:
                 value = float(data[field])
                 if not (min_val <= value <= max_val):
-                    return False, f'{field} out of valid range ({min_val}-{max_val})'
+                    return False, f'{
+                        field} out of valid range ({min_val}-{max_val})'
             except (ValueError, TypeError):
                 return False, f'{field} must be a number'
 

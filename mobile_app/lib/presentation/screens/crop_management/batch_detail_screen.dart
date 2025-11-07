@@ -450,7 +450,7 @@ class BatchDetailScreen extends StatelessWidget {
                   icon: Icons.camera_alt,
                   label: isHindi ? 'स्कैन करें' : 'Scan',
                   color: Colors.green,
-                  onTap: () => context.push('/camera'),
+                  onTap: () => context.push('/disease-detection'),
                 ),
               ),
               const SizedBox(width: 12),

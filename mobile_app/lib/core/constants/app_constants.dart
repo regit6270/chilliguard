@@ -3,7 +3,13 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API
-  static const String baseUrl = 'https://api.chilliguard.com'; // Replace with actual URL
+  //static const String baseUrl = 'https://api.chilliguard.com'; // Replace with actual URL
+  // FOR DEVELOPMENT ONLY
+  //static const String baseUrl = 'http://10.0.2.2:5000'; // Android Emulator
+  static const String baseUrl =
+      'http://10.149.197.250:5000'; // Physical Device (use your PC's IP)
+  // static const String baseUrl = 'http://localhost:5000'; // iOS Simulator
+
   static const String apiVersion = 'v1';
   static const int apiTimeout = 30000; // 30 seconds
 
@@ -80,7 +86,12 @@ class ApiEndpoints {
   static const String diseaseDetail = '/api/v1/disease';
 
   // Recommendations APIs
-  static const String recommendTreatment = '/api/v1/recommend-treatment';
+  static const String soilImprovements =
+      '/api/v1/recommendations/soil-improvements';
+  static const String fertilizerSchedule =
+      '/api/v1/recommendations/fertilizer-schedule';
+  static const String soilParametersInfo =
+      '/api/v1/recommendations/soil-parameters-info';
 
   // Batch APIs
   static const String batches = '/api/v1/batches';
@@ -89,7 +100,8 @@ class ApiEndpoints {
   static const String batchTimeline = '/api/v1/batches';
 
   // Report APIs
-  static const String generateReport = '/api/v1/reports/generate-end-cycle-report';
+  static const String generateReport =
+      '/api/v1/reports/generate-end-cycle-report';
   static const String reportDetail = '/api/v1/reports';
   static const String batchComparison = '/api/v1/comparisons/batches';
 

@@ -1,6 +1,9 @@
 """Sensor reading data model"""
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 
 class SensorReading:
     """Sensor reading model for IoT data"""
@@ -18,8 +21,8 @@ class SensorReading:
         temperature: Optional[float] = None,
         humidity: Optional[float] = None,
         timestamp: Optional[datetime] = None,
-        **kwargs
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.reading_id = reading_id
         self.field_id = field_id
         self.device_id = device_id
@@ -27,6 +30,7 @@ class SensorReading:
         self.nitrogen = nitrogen
         self.phosphorus = phosphorus
         self.potassium = potassium
+
         self.moisture = moisture
         self.temperature = temperature
         self.humidity = humidity
@@ -56,5 +60,5 @@ class SensorReading:
         """Create SensorReading from Firestore document"""
         return SensorReading(**data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<SensorReading {self.reading_id} - Field: {self.field_id}>"

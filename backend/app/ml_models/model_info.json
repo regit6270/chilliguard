@@ -1,0 +1,25 @@
+{
+  "class_names": [
+    "Bacterial Spot",
+    "Cercospora Leaf Spot",
+    "Curl Virus",
+    "Healthy Leaf",
+    "Nutrition Deficiency",
+    "White spot"
+  ],
+  "class_indices": {
+    "Bacterial Spot": 0,
+    "Cercospora Leaf Spot": 1,
+    "Curl Virus": 2,
+    "Healthy Leaf": 3,
+    "Nutrition Deficiency": 4,
+    "White spot": 5
+  },
+  "input_size": [
+    224,
+    224
+  ],
+  "test_accuracy": 0.9623655676841736,
+  "test_precision": 0.9674796462059021,
+  "test_recall": 0.9596773982048035
+}

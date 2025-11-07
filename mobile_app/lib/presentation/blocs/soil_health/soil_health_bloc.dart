@@ -25,48 +25,109 @@ class SoilHealthBloc extends Bloc<SoilHealthEvent, SoilHealthState> {
   String _currentDuration = '7d';
   String _currentParameter = 'ph';
 
+  // Future<void> _onLoadSoilHealthData(
+  //   LoadSoilHealthData event,
+  //   Emitter<SoilHealthState> emit,
+  // ) async {
+  //   emit(SoilHealthLoading());
+
+  //   _currentFieldId = event.fieldId;
+  //   _currentDuration = event.duration;
+
+  //   try {
+  //     // Fetch historical data
+  //     final historyResult = await sensorRepository.getHistory(
+  //       fieldId: event.fieldId,
+  //       duration: event.duration,
+  //     );
+
+  //     // Fetch latest reading
+  //     final latestResult =
+  //         await sensorRepository.getLatestReading(event.fieldId);
+
+  //     historyResult.fold(
+  //       (failure) => emit(SoilHealthError(failure.message)),
+  //       (readings) {
+  //         SensorReading? latestReading;
+  //         latestResult.fold(
+  //           (failure) => latestReading = null,
+  //           (reading) => latestReading = reading,
+  //         );
+
+  //         // Calculate statistics
+  //         final averages = _calculateAverages(readings);
+  //         final trends = _calculateTrends(readings);
+
+  //         emit(SoilHealthLoaded(
+  //           readings: readings,
+  //           selectedParameter: _currentParameter,
+  //           selectedDuration: event.duration,
+  //           latestReading: latestReading,
+  //           averages: averages,
+  //           trends: trends,
+  //           lastUpdated: DateTime.now(),
+  //         ));
+  //       },
+  //     );
+  //   } catch (e) {
+  //     emit(SoilHealthError('Failed to load soil health data: ${e.toString()}'));
+  //   }
+  // }
+
   Future<void> _onLoadSoilHealthData(
     LoadSoilHealthData event,
     Emitter<SoilHealthState> emit,
   ) async {
     emit(SoilHealthLoading());
-
     _currentFieldId = event.fieldId;
     _currentDuration = event.duration;
 
     try {
-      // Fetch historical data
+      print(
+          '🔍 [BLoC] Fetching data for field: ${event.fieldId}, duration: ${event.duration}');
+      // Fetch data
       final historyResult = await sensorRepository.getHistory(
         fieldId: event.fieldId,
         duration: event.duration,
       );
-
-      // Fetch latest reading
+      print('🔍 [BLoC] History result: $historyResult');
       final latestResult =
           await sensorRepository.getLatestReading(event.fieldId);
 
+      // ⭐ CORRECT: Use fold() with PROPER syntax
       historyResult.fold(
-        (failure) => emit(SoilHealthError(failure.message)),
+        // Left = Error case
+        (failure) {
+          emit(SoilHealthError(failure.message));
+        },
+        // Right = Success case
         (readings) {
+          // Handle latest reading result
           SensorReading? latestReading;
+
           latestResult.fold(
             (failure) => latestReading = null,
             (reading) => latestReading = reading,
           );
 
-          // Calculate statistics
-          final averages = _calculateAverages(readings);
-          final trends = _calculateTrends(readings);
+          // Emit result
+          if (readings.isNotEmpty) {
+            final averages = _calculateAverages(readings);
+            final trends = _calculateTrends(readings);
 
-          emit(SoilHealthLoaded(
-            readings: readings,
-            selectedParameter: _currentParameter,
-            selectedDuration: event.duration,
-            latestReading: latestReading,
-            averages: averages,
-            trends: trends,
-            lastUpdated: DateTime.now(),
-          ));
+            emit(SoilHealthLoaded(
+              readings: readings,
+              selectedParameter: _currentParameter,
+              selectedDuration: event.duration,
+              latestReading: latestReading,
+              averages: averages,
+              trends: trends,
+              lastUpdated: DateTime.now(),
+            ));
+          } else {
+            emit(const SoilHealthError(
+                'No sensor data available for this field'));
+          }
         },
       );
     } catch (e) {

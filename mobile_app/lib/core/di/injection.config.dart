@@ -25,6 +25,8 @@ import '../../data/datasources/local/sensor_local_data_source.dart' as _i1020;
 import '../../data/datasources/remote/alert_remote_data_source.dart' as _i727;
 import '../../data/datasources/remote/batch_remote_data_source.dart' as _i373;
 import '../../data/datasources/remote/disease_remote_data_source.dart' as _i213;
+import '../../data/datasources/remote/recommendation_remote_data_source.dart'
+    as _i509;
 import '../../data/datasources/remote/sensor_remote_data_source.dart' as _i888;
 import '../../data/repositories/alert_repository.dart' as _i652;
 import '../../data/repositories/alert_repository_impl.dart' as _i115;
@@ -32,6 +34,8 @@ import '../../data/repositories/batch_repository.dart' as _i839;
 import '../../data/repositories/batch_repository_impl.dart' as _i615;
 import '../../data/repositories/disease_repository.dart' as _i958;
 import '../../data/repositories/disease_repository_impl.dart' as _i290;
+import '../../data/repositories/recommendation_repository.dart' as _i323;
+import '../../data/repositories/recommendation_repository_impl.dart' as _i678;
 import '../../data/repositories/sensor_repository.dart' as _i566;
 import '../../data/repositories/sensor_repository_impl.dart' as _i119;
 import '../../presentation/blocs/alert/alert_bloc.dart' as _i869;
@@ -42,6 +46,8 @@ import '../../presentation/blocs/dashboard/dashboard_bloc.dart' as _i286;
 import '../../presentation/blocs/disease_detection/disease_detection_bloc.dart'
     as _i903;
 import '../../presentation/blocs/language/language_bloc.dart' as _i117;
+import '../../presentation/blocs/recommendation/recommendation_bloc.dart'
+    as _i205;
 import '../../presentation/blocs/sensor/sensor_bloc.dart' as _i273;
 import '../../presentation/blocs/soil_health/soil_health_bloc.dart' as _i284;
 import '../database/database_helper.dart' as _i64;
@@ -70,8 +76,6 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i892.FirebaseMessaging>(),
           gh<_i163.FlutterLocalNotificationsPlugin>(),
         ));
-    gh.factory<_i273.SensorBloc>(
-        () => _i273.SensorBloc(gh<_i119.SensorRepositoryImpl>()));
     gh.factory<_i141.AuthBloc>(() => _i141.AuthBloc(
           gh<_i59.FirebaseAuth>(),
           gh<_i381.UserService>(),
@@ -118,8 +122,17 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i727.AlertRemoteDataSourceImpl(gh<_i557.ApiClient>()));
     gh.factory<_i284.SoilHealthBloc>(() =>
         _i284.SoilHealthBloc(sensorRepository: gh<_i566.SensorRepository>()));
+    gh.factory<_i273.SensorBloc>(
+        () => _i273.SensorBloc(gh<_i566.SensorRepository>()));
+    gh.lazySingleton<_i509.RecommendationRemoteDataSource>(
+        () => _i509.RecommendationRemoteDataSourceImpl(gh<_i557.ApiClient>()));
     gh.factory<_i960.BatchBloc>(
         () => _i960.BatchBloc(batchRepository: gh<_i839.BatchRepository>()));
+    gh.lazySingleton<_i323.RecommendationRepository>(
+        () => _i678.RecommendationRepositoryImpl(
+              remoteDataSource: gh<_i509.RecommendationRemoteDataSource>(),
+              networkInfo: gh<_i932.NetworkInfo>(),
+            ));
     gh.lazySingleton<_i652.AlertRepository>(() => _i115.AlertRepositoryImpl(
           remoteDataSource: gh<_i727.AlertRemoteDataSource>(),
           localDataSource: gh<_i611.AlertLocalDataSource>(),
@@ -130,6 +143,8 @@ extension GetItInjectableX on _i174.GetIt {
           batchRepository: gh<_i839.BatchRepository>(),
           alertRepository: gh<_i652.AlertRepository>(),
         ));
+    gh.factory<_i205.RecommendationBloc>(
+        () => _i205.RecommendationBloc(gh<_i323.RecommendationRepository>()));
     gh.factory<_i869.AlertBloc>(
         () => _i869.AlertBloc(alertRepository: gh<_i652.AlertRepository>()));
     return this;

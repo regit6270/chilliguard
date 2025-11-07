@@ -20,10 +20,14 @@ class ApiClient {
       baseUrl: AppConstants.baseUrl,
       connectTimeout: const Duration(milliseconds: AppConstants.apiTimeout),
       receiveTimeout: const Duration(milliseconds: AppConstants.apiTimeout),
+      sendTimeout:
+          const Duration(milliseconds: AppConstants.apiTimeout), // ← ADD THIS!
+      validateStatus: (status) => status != null, // ← ADD THIS!
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       },
+      persistentConnection: true, // ← ADD THIS!
     );
 
     // Add interceptors
@@ -55,8 +59,11 @@ class ApiClient {
       options.headers['Authorization'] = 'Bearer $token';
     }
 
+    // ✅ Log with proper URI instead of just path
+    AppLogger.debug('🐛 uri: [${options.uri}]'); // Changed this line
     AppLogger.info('REQUEST[${options.method}] => PATH: ${options.path}');
-    handler.next(options);
+
+    handler.next(options); // Properly returns here
   }
 
   void _onResponse(

@@ -1,15 +1,6 @@
-import 'package:json_annotation/json_annotation.dart';
-
 import '../../domain/entities/sensor_reading.dart';
 
-part 'sensor_reading_model.g.dart';
-
-@JsonSerializable()
 class SensorReadingModel {
-  @JsonKey(name: 'reading_id')
-  final String readingId;
-
-  @JsonKey(name: 'field_id')
   final String fieldId;
 
   final double ph;
@@ -20,11 +11,9 @@ class SensorReadingModel {
   final double temperature;
   final double humidity;
 
-  @JsonKey(fromJson: _dateTimeFromJson, toJson: _dateTimeToJson)
   final DateTime timestamp;
 
   const SensorReadingModel({
-    required this.readingId,
     required this.fieldId,
     required this.ph,
     required this.nitrogen,
@@ -36,14 +25,34 @@ class SensorReadingModel {
     required this.timestamp,
   });
 
-  factory SensorReadingModel.fromJson(Map<String, dynamic> json) =>
-      _$SensorReadingModelFromJson(json);
+  factory SensorReadingModel.fromJson(Map<String, dynamic> json) {
+    return SensorReadingModel(
+      fieldId: json['field_id'] as String? ?? 'unknown',
+      ph: (json['ph'] as num?)?.toDouble() ?? 0.0,
+      nitrogen: (json['nitrogen'] as num?)?.toDouble() ?? 0.0,
+      phosphorus: (json['phosphorus'] as num?)?.toDouble() ?? 0.0,
+      potassium: (json['potassium'] as num?)?.toDouble() ?? 0.0,
+      moisture: (json['moisture'] as num?)?.toDouble() ?? 0.0,
+      temperature: (json['temperature'] as num?)?.toDouble() ?? 0.0,
+      humidity: (json['humidity'] as num?)?.toDouble() ?? 0.0,
+      timestamp: _dateTimeFromJson(json['timestamp']),
+    );
+  }
 
-  Map<String, dynamic> toJson() => _$SensorReadingModelToJson(this);
+  Map<String, dynamic> toJson() => {
+        'field_id': fieldId,
+        'ph': ph,
+        'nitrogen': nitrogen,
+        'phosphorus': phosphorus,
+        'potassium': potassium,
+        'moisture': moisture,
+        'temperature': temperature,
+        'humidity': humidity,
+        'timestamp': _dateTimeToJson(timestamp),
+      };
 
   SensorReading toEntity() {
     return SensorReading(
-      readingId: readingId,
       fieldId: fieldId,
       ph: ph,
       nitrogen: nitrogen,
@@ -58,7 +67,6 @@ class SensorReadingModel {
 
   factory SensorReadingModel.fromEntity(SensorReading entity) {
     return SensorReadingModel(
-      readingId: entity.readingId,
       fieldId: entity.fieldId,
       ph: entity.ph,
       nitrogen: entity.nitrogen,
@@ -66,7 +74,7 @@ class SensorReadingModel {
       potassium: entity.potassium,
       moisture: entity.moisture,
       temperature: entity.temperature,
-      humidity: entity.humidity,
+      humidity: entity.humidity ?? 0.0, // ⭐ DOUBLE not String
       timestamp: entity.timestamp,
     );
   }

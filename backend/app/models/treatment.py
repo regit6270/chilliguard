@@ -1,6 +1,9 @@
 """Treatment data model"""
-from datetime import datetime, date
-from typing import Optional, Dict, Any
+from __future__ import annotations
+
+from datetime import date, datetime
+from typing import Any, Dict, Optional
+
 
 class Treatment:
     """Treatment model for disease treatment tracking"""
@@ -23,8 +26,8 @@ class Treatment:
         cost: Optional[float] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
-        **kwargs
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.treatment_id = treatment_id
         self.user_id = user_id
         self.batch_id = batch_id
@@ -63,17 +66,20 @@ class Treatment:
             'effectiveness_rating': self.effectiveness_rating,
             'cost': self.cost,
             'created_at': self.created_at,
-            'updated_at': self.updated_at
-        }
+            'updated_at': self.updated_at}
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> 'Treatment':
         """Create Treatment from Firestore document"""
-        if 'application_date' in data and isinstance(data['application_date'], str):
-            data['application_date'] = date.fromisoformat(data['application_date'])
-        if 'next_application_date' in data and isinstance(data['next_application_date'], str):
-            data['next_application_date'] = date.fromisoformat(data['next_application_date'])
+        if 'application_date' in data and isinstance(
+                data['application_date'], str):
+            data['application_date'] = date.fromisoformat(
+                data['application_date'])
+        if 'next_application_date' in data and isinstance(
+                data['next_application_date'], str):
+            data['next_application_date'] = date.fromisoformat(
+                data['next_application_date'])
         return Treatment(**data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Treatment {self.treatment_id} - {self.treatment_name}>"

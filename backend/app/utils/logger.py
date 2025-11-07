@@ -1,10 +1,15 @@
 """Custom logging configuration"""
+from __future__ import annotations
+
 import logging
 import sys
+from logging import Logger
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+from typing import Optional
 
-def setup_logger(name: str, log_file: str = 'app.log', level=logging.INFO):
+
+def setup_logger(name: str, log_file: str = 'app.log', level: int = logging.INFO) -> Logger:
     """Setup logger with file and console handlers"""
 
     # Create logger
@@ -49,20 +54,20 @@ class AppLogger:
     """Application logger wrapper"""
 
     @staticmethod
-    def info(message: str):
+    def info(message: str) -> None:
         logging.info(message)
 
     @staticmethod
-    def debug(message: str):
+    def debug(message: str) -> None:
         logging.debug(message)
 
     @staticmethod
-    def warning(message: str):
+    def warning(message: str) -> None:
         logging.warning(message)
 
     @staticmethod
-    def error(message: str, error: Exception = None):
-        if error:
+    def error(message: str, error: Optional[BaseException] = None) -> None:
+        if error is not None:
             logging.error(f'{message}: {str(error)}', exc_info=True)
         else:
             logging.error(message)

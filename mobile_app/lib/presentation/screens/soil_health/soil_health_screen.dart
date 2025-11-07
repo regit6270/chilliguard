@@ -25,6 +25,7 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
   }
 
   void _loadSoilHealth() {
+    print('🔍 [Screen] Triggering LoadSoilHealthData event');
     const fieldId = 'field_123'; // TODO: Get from LocalStorageService
     context.read<SoilHealthBloc>().add(
           const LoadSoilHealthData(fieldId: fieldId, duration: '7d'),
@@ -44,8 +45,11 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
           ),
         ],
       ),
+      // ⭐ CRITICAL FIX: Added <SoilHealthBloc, SoilHealthState> types
       body: BlocBuilder<SoilHealthBloc, SoilHealthState>(
         builder: (context, state) {
+          print('🔍 [Screen] BLocBuilder state: ${state.runtimeType}');
+
           if (state is SoilHealthLoading) {
             return const LoadingOverlay(message: 'Loading soil data...');
           }
@@ -55,10 +59,16 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
           }
 
           if (state is SoilHealthLoaded) {
+            print(
+                '✅ [Screen] SoilHealthLoaded - ${state.readings.length} readings');
             return RefreshIndicator(
               onRefresh: () async {
+                // ⭐ FIXED: Use correct event
                 context.read<SoilHealthBloc>().add(
-                      const RefreshSoilHealth('field_123'),
+                      const LoadSoilHealthData(
+                        fieldId: 'field_123',
+                        duration: '7d',
+                      ),
                     );
                 await Future.delayed(const Duration(milliseconds: 500));
               },
@@ -76,12 +86,10 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
                             );
                       },
                     ),
-
                     const SizedBox(height: 20),
 
                     // Statistics Cards
                     if (state.latestReading != null) _buildStatsGrid(state),
-
                     const SizedBox(height: 24),
 
                     // Parameter Selector
@@ -92,7 +100,6 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
                           ),
                     ),
                     const SizedBox(height: 12),
-
                     ParameterSelector(
                       selectedParameter: state.selectedParameter,
                       onParameterChanged: (parameter) {
@@ -101,17 +108,14 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
                             );
                       },
                     ),
-
                     const SizedBox(height: 20),
 
-                    // Chart
+                    // ⭐ FIXED: Chart now receives correct data
                     _buildChart(state),
-
                     const SizedBox(height: 24),
 
                     // Analysis Summary
                     _buildAnalysisSummary(state),
-
                     const SizedBox(height: 80), // Bottom nav padding
                   ],
                 ),
@@ -123,7 +127,7 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
         },
       ),
       bottomNavigationBar:
-          const ChilliGuardBottomNavigationBar(currentIndex: 2),
+          const ChilliGuardBottomNavigationBar(currentIndex: 1),
     );
   }
 
@@ -197,28 +201,59 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
   }
 
   String _getRangeValue(SoilHealthLoaded state) {
-    final values = state.trends[state.selectedParameter] ?? [];
-    if (values.isEmpty) return 'N/A';
+    // ⭐ FIXED: Get readings instead of trends
+    if (state.readings.isEmpty) return 'N/A';
 
-    final min = values.reduce((a, b) => a < b ? a : b);
-    final max = values.reduce((a, b) => a > b ? a : b);
+    final parameter = state.selectedParameter;
+    double minVal = double.infinity;
+    double maxVal = double.negativeInfinity;
 
-    return '${min.toStringAsFixed(1)}-${max.toStringAsFixed(1)}';
+    for (final reading in state.readings) {
+      double value;
+      switch (parameter) {
+        case 'ph':
+          value = reading.ph;
+          break;
+        case 'nitrogen':
+          value = reading.nitrogen;
+          break;
+        case 'phosphorus':
+          value = reading.phosphorus;
+          break;
+        case 'potassium':
+          value = reading.potassium;
+          break;
+        case 'moisture':
+          value = reading.moisture;
+          break;
+        case 'temperature':
+          value = reading.temperature;
+          break;
+        default:
+          value = 0;
+      }
+
+      if (value < minVal) minVal = value;
+      if (value > maxVal) maxVal = value;
+    }
+
+    return '${minVal.toStringAsFixed(1)}-${maxVal.toStringAsFixed(1)}';
   }
 
   Widget _buildChart(SoilHealthLoaded state) {
-    final values = state.trends[state.selectedParameter] ?? [];
+    // ⭐ FIXED: Extract chart values from readings
+    final chartSpots = _getChartSpots(state);
 
-    if (values.isEmpty) {
+    if (chartSpots.isEmpty) {
       return Container(
-        height: 250,
+        height: 240,
         alignment: Alignment.center,
         child: const Text('No data available'),
       );
     }
 
     return Container(
-      height: 250,
+      height: 240,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -248,7 +283,7 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
             leftTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
-                reservedSize: 40,
+                reservedSize: 35,
                 getTitlesWidget: (value, meta) {
                   return Text(
                     value.toStringAsFixed(0),
@@ -262,7 +297,8 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
                 showTitles: true,
                 reservedSize: 30,
                 getTitlesWidget: (value, meta) {
-                  if (value.toInt() % (values.length ~/ 5).clamp(1, 10) == 0) {
+                  if (value.toInt() % (chartSpots.length ~/ 5).clamp(1, 10) ==
+                      0) {
                     return Text(
                       'D${value.toInt() + 1}',
                       style: const TextStyle(fontSize: 10),
@@ -280,9 +316,7 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
           borderData: FlBorderData(show: false),
           lineBarsData: [
             LineChartBarData(
-              spots: values.asMap().entries.map((entry) {
-                return FlSpot(entry.key.toDouble(), entry.value);
-              }).toList(),
+              spots: chartSpots,
               isCurved: true,
               color: Theme.of(context).colorScheme.primary,
               barWidth: 3,
@@ -297,6 +331,44 @@ class _SoilHealthScreenState extends State<SoilHealthScreen> {
         ),
       ),
     );
+  }
+
+  // ⭐ NEW HELPER: Extract chart spots from readings
+  List<FlSpot> _getChartSpots(SoilHealthLoaded state) {
+    final spots = <FlSpot>[];
+    final parameter = state.selectedParameter;
+
+    for (int i = 0; i < state.readings.length; i++) {
+      final reading = state.readings[i];
+      double value;
+
+      switch (parameter) {
+        case 'ph':
+          value = reading.ph;
+          break;
+        case 'nitrogen':
+          value = reading.nitrogen;
+          break;
+        case 'phosphorus':
+          value = reading.phosphorus;
+          break;
+        case 'potassium':
+          value = reading.potassium;
+          break;
+        case 'moisture':
+          value = reading.moisture;
+          break;
+        case 'temperature':
+          value = reading.temperature;
+          break;
+        default:
+          value = 0;
+      }
+
+      spots.add(FlSpot(i.toDouble(), value));
+    }
+
+    return spots;
   }
 
   Widget _buildAnalysisSummary(SoilHealthLoaded state) {

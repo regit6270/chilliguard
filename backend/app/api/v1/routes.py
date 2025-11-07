@@ -1,14 +1,21 @@
-from flask import Blueprint
+from flask import Blueprint, Flask
 from app.api.v1.endpoints import (
-    sensors, feasibility, disease_detection,
-    recommendations, batches, reports,
-    knowledge_base, users, fields, alerts
+    sensors,
+    feasibility,
+    disease_detection,
+    recommendations,
+    batches,
+    reports,
+    knowledge_base,
+    users,
+    fields,
+    alerts
 )
 
-def register_routes(app):
-    """Register all API v1 routes"""
 
-    api_v1 = Blueprint('api_v1', __name__, url_prefix='/api/v1')
+def register_routes(app: Flask) -> None:
+    """Register all API v1 routes"""
+    api_v1: Blueprint = Blueprint('api_v1', __name__, url_prefix='/api/v1')
 
     # Register endpoint blueprints
     api_v1.register_blueprint(sensors.bp)
@@ -17,7 +24,7 @@ def register_routes(app):
     api_v1.register_blueprint(recommendations.bp)
     api_v1.register_blueprint(batches.bp)
     api_v1.register_blueprint(reports.bp)
-    api_v1.register_blueprint(knowledge_base.bp)
+    api_v1.register_blueprint(knowledge_base.knowledge_base_bp)
     api_v1.register_blueprint(users.bp)
     api_v1.register_blueprint(fields.bp)
     api_v1.register_blueprint(alerts.bp)

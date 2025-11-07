@@ -18,7 +18,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _onCreate,
       onUpgrade: _onUpgrade,
     );
@@ -28,7 +28,6 @@ class DatabaseHelper {
     // Sensor readings table
     await db.execute('''
       CREATE TABLE sensor_readings (
-        reading_id TEXT PRIMARY KEY,
         field_id TEXT NOT NULL,
         ph REAL,
         nitrogen REAL,
@@ -37,7 +36,8 @@ class DatabaseHelper {
         moisture REAL,
         temperature REAL,
         humidity REAL,
-        timestamp TEXT NOT NULL
+        timestamp TEXT NOT NULL,
+        PRIMARY KEY (field_id, timestamp)
       )
     ''');
 
@@ -101,7 +101,12 @@ class DatabaseHelper {
   }
 
   Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
-    // Handle database upgrades here
+    // Simple strategy: drop and recreate tables when upgrading schema.
+    await db.execute('DROP TABLE IF EXISTS sensor_readings');
+    await db.execute('DROP TABLE IF EXISTS crop_batches');
+    await db.execute('DROP TABLE IF EXISTS disease_detections');
+    await db.execute('DROP TABLE IF EXISTS alerts');
+    await _onCreate(db, newVersion);
   }
 
   Future<void> clearAllTables() async {

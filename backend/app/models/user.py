@@ -1,6 +1,9 @@
 """User data model"""
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
+
 
 class User:
     """User model representing a farmer/landowner"""
@@ -14,8 +17,8 @@ class User:
         location: Optional[Dict[str, str]] = None,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
-        **kwargs
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.user_id = user_id
         self.name = name
         self.phone = phone
@@ -45,5 +48,5 @@ class User:
         """Create User from Firestore document"""
         return User(**data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<User {self.user_id} - {self.name}>"

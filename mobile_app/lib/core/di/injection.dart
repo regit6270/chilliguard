@@ -32,6 +32,11 @@ Future<void> configureDependencies() async {
   // HTTP Client
   getIt.registerLazySingleton<http.Client>(() => http.Client());
 
+  // // Firebase Realtime Database
+  // getIt.registerLazySingleton<FirebaseDatabase>(
+  //   () => FirebaseDatabase.instance,
+  // );
+
   // Firebase Auth (single registration)
   getIt.registerLazySingleton<FirebaseAuth>(() => FirebaseAuth.instance);
 

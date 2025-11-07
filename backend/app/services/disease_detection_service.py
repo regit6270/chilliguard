@@ -1,261 +1,163 @@
-import torch
-import torchvision.transforms as transforms
-from PIL import Image
-import numpy as np
-from app.config import Config
-from app.core.firebase import get_storage_bucket
-from app.core.database import db
+"""
+Disease detection service - TFLite inference
+"""
 import logging
-from datetime import datetime
+import numpy as np
+from PIL import Image
+from io import BytesIO
 import uuid
+from datetime import datetime
+from typing import Dict, Any, Optional
+
+from app.ml_models.model_loader import predict_disease, get_class_names
+from app.utils.disease_metadata import get_disease_by_class, DISEASE_CLASSES
 
 logger = logging.getLogger(__name__)
 
-# Disease classes (update based on your trained model)
-DISEASE_CLASSES = [
-    'healthy',
-    'anthracnose_leaf_spot',
-    'bacterial_spot',
-    'powdery_mildew',
-    'fusarium_wilt',
-    'fruit_rot',
-    'pepper_weevil_damage',
-    'nitrogen_deficiency',
-    'phosphorus_deficiency'
-]
+# Image preprocessing constants
+IMG_SIZE = 224
 
-def detect_disease(image_path, field_id=None, batch_id=None, user_id=None, use_cloud_model=False):
+def preprocess_image(image_bytes: bytes) -> np.ndarray:
     """
-    Detect disease from leaf image
-
-    Args:
-        image_path: Path to image file
-        field_id: Optional field ID
-        batch_id: Optional batch ID
-        user_id: User ID
-        use_cloud_model: Whether to use cloud model (higher accuracy)
-
-    Returns:
-        dict: Detection results
+    Preprocess image for TFLite model inference
+    Input: Raw image bytes
+    Output: Preprocessed numpy array (1, 224, 224, 3) with values [0, 1]
     """
     try:
-        # Preprocess image
-        image = Image.open(image_path).convert('RGB')
-        preprocessed = preprocess_image(image)
+        # Load image
+        img = Image.open(BytesIO(image_bytes)).convert('RGB')
 
-        # Run inference
-        if use_cloud_model:
-            # Use Google Vertex AI endpoint
-            results = _run_cloud_inference(preprocessed)
-        else:
-            # Use local TFLite model
-            results = _run_local_inference(preprocessed)
+        # Resize to model input size (224x224)
+        img = img.resize((IMG_SIZE, IMG_SIZE))
 
-        # Upload image to Cloud Storage
-        image_url = _upload_image(image_path, user_id)
+        # Convert to numpy array
+        img_array = np.array(img, dtype=np.float32)
 
-        # Calculate affected area (simplified - can be enhanced with segmentation)
-        affected_area_percent = _estimate_affected_area(results['confidence'])
+        # Normalize to [0, 1]
+        img_array = img_array / 255.0
 
-        # Determine severity
-        severity = _determine_severity(results['confidence'], affected_area_percent)
+        # Add batch dimension: (224, 224, 3) -> (1, 224, 224, 3)
+        img_array = np.expand_dims(img_array, axis=0)
 
-        # Store detection in database
-        detection_id = _store_detection(
-            user_id=user_id,
-            field_id=field_id,
-            batch_id=batch_id,
-            disease_name=results['disease_name'],
-            confidence=results['confidence'],
-            severity=severity,
-            affected_area=affected_area_percent,
-            image_url=image_url,
-            model_type='cloud' if use_cloud_model else 'device'
-        )
-
-        return {
-            'detection_id': detection_id,
-            'disease_name': results['disease_name'],
-            'confidence_score': round(results['confidence'] * 100, 2),
-            'severity': severity,
-            'affected_area_percent': affected_area_percent,
-            'image_url': image_url,
-            'model_type': 'cloud' if use_cloud_model else 'device',
-            'processing_time_ms': results.get('processing_time_ms', 0),
-            'timestamp': datetime.utcnow().isoformat()
-        }
+        logger.info(f"✅ Image preprocessed: shape={img_array.shape}, dtype={img_array.dtype}")
+        return img_array
 
     except Exception as e:
-        logger.error(f'Error detecting disease: {str(e)}')
-        raise
+        logger.error(f"❌ Image preprocessing failed: {e}")
+        raise ValueError(f"Invalid image: {str(e)}")
 
-def preprocess_image(image):
-    """Preprocess image for model input"""
+def detect_disease(image_bytes: bytes,
+                  user_id: Optional[str] = None,
+                  field_id: Optional[str] = None,
+                  batch_id: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Main disease detection function using TFLite model
 
-    # Resize to model input size (typically 224x224 or 299x299)
-    transform = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    ])
+    Args:
+        image_bytes: Raw image data
+        user_id: Optional user identifier
+        field_id: Optional field identifier
+        batch_id: Optional batch identifier
 
-    return transform(image).unsqueeze(0)
-
-def _run_local_inference(image_tensor):
-    """Run inference using local PyTorch model"""
-
-    # Load model (should be cached after first load)
-    model = _load_local_model()
-
-    with torch.no_grad():
-        outputs = model(image_tensor)
-        probabilities = torch.nn.functional.softmax(outputs, dim=1)
-        confidence, predicted = torch.max(probabilities, 1)
-
-    disease_name = DISEASE_CLASSES[predicted.item()]
-    confidence_score = confidence.item()
-
-    return {
-        'disease_name': disease_name,
-        'confidence': confidence_score
-    }
-
-def _run_cloud_inference(image_tensor):
-    """Run inference using Google Vertex AI"""
-
-    # Implement Vertex AI prediction
-    # This is a placeholder - implement actual Vertex AI call
-    from google.cloud import aiplatform
-
-    endpoint = aiplatform.Endpoint(Config.VERTEX_AI_ENDPOINT)
-
-    # Convert tensor to format expected by endpoint
-    instances = [{'input': image_tensor.numpy().tolist()}]
-
-    response = endpoint.predict(instances=instances)
-    predictions = response.predictions[0]
-
-    # Parse response
-    disease_idx = np.argmax(predictions)
-    confidence = predictions[disease_idx]
-
-    return {
-        'disease_name': DISEASE_CLASSES[disease_idx],
-        'confidence': confidence
-    }
-
-def _load_local_model():
-    """Load local PyTorch model"""
-
-    # Cache model globally
-    if not hasattr(_load_local_model, 'model'):
-        model_path = Config.TFLITE_MODEL_PATH.replace('.tflite', '.pt')
-        model = torch.load(model_path, map_location=torch.device('cpu'))
-        model.eval()
-        _load_local_model.model = model
-
-    return _load_local_model.model
-
-def _upload_image(image_path, user_id):
-    """Upload image to Cloud Storage"""
-
-    bucket = get_storage_bucket()
-
-    # Generate unique filename
-    filename = f'disease_photos/{user_id}/{uuid.uuid4().hex}.jpg'
-    blob = bucket.blob(filename)
-
-    # Upload with compression
-    blob.upload_from_filename(image_path, content_type='image/jpeg')
-
-    # Make publicly accessible (or use signed URL)
-    blob.make_public()
-
-    return blob.public_url
-
-def _estimate_affected_area(confidence):
-    """Estimate affected area percentage based on confidence"""
-
-    # Simple heuristic - can be enhanced with segmentation model
-    if confidence > 0.9:
-        return np.random.uniform(20, 40)
-    elif confidence > 0.8:
-        return np.random.uniform(10, 25)
-    else:
-        return np.random.uniform(5, 15)
-
-def _determine_severity(confidence, affected_area):
-    """Determine disease severity"""
-
-    if affected_area > 30 or confidence > 0.95:
-        return 'severe'
-    elif affected_area > 15 or confidence > 0.85:
-        return 'moderate'
-    else:
-        return 'mild'
-
-def _store_detection(user_id, field_id, batch_id, disease_name, confidence,
-                     severity, affected_area, image_url, model_type):
-    """Store detection in database"""
-
-    detection_data = {
-        'user_id': user_id,
-        'field_id': field_id,
-        'batch_id': batch_id,
-        'disease_name': disease_name,
-        'confidence': confidence,
-        'severity': severity,
-        'affected_area_percent': affected_area,
-        'image_url': image_url,
-        'model_type': model_type,
-        'timestamp': datetime.utcnow()
-    }
-
-    detection_id = db.create_document('disease_detections', detection_data)
-
-    # Also add to batch events if batch_id provided
-    if batch_id:
-        event_data = {
-            'batch_id': batch_id,
-            'event_type': 'disease_detected',
-            'timestamp': datetime.utcnow(),
-            'description': f'{disease_name} detected with {confidence*100:.1f}% confidence',
-            'metadata': {
-                'detection_id': detection_id,
-                'disease_name': disease_name,
-                'severity': severity
-            }
+    Returns:
+        {
+            'detection_id': str,
+            'disease_name': str,
+            'disease_class': int,
+            'confidence': float,
+            'severity': str,
+            'affected_area_percentage': float,
+            'treatments': list,
+            'recommendations': list,
+            'timestamp': str,
+            'status': 'success'
         }
-        db.create_document('batch_events', event_data)
+    """
+    try:
+        # Step 1: Preprocess image
+        logger.info("🔄 Step 1: Preprocessing image...")
+        preprocessed_img = preprocess_image(image_bytes)
 
-    return detection_id
+        # Step 2: Run TFLite inference
+        logger.info("🔄 Step 2: Running TFLite model inference...")
+        predictions = predict_disease(preprocessed_img)
 
-def get_disease_details(disease_id):
-    """Get detailed information about a disease"""
+        # Step 3: Get prediction results
+        class_id = int(np.argmax(predictions[0]))
+        confidence = float(np.max(predictions[0]))
 
-    # Disease encyclopedia
-    disease_info = {
-        'anthracnose_leaf_spot': {
-            'name': 'Anthracnose Leaf Spot',
-            'description': 'Brown, circular lesions on leaves with concentric rings. Common in humid conditions.',
-            'symptoms': [
-                'Dark brown spots with concentric rings',
-                'Spots may have yellow halos',
-                'Premature leaf drop'
-            ],
-            'causes': [
-                'Fungal pathogen Colletotrichum species',
-                'Favored by warm, humid weather',
-                'Spreads through water splash'
-            ],
-            'prevention': [
-                'Use disease-resistant varieties',
-                'Ensure proper plant spacing',
-                'Avoid overhead irrigation',
-                'Remove infected plant debris'
-            ]
-        },
-        # Add more diseases...
-    }
+        logger.info(f"✅ Prediction complete: class={class_id}, confidence={confidence:.4f}")
 
-    return disease_info.get(disease_id, {})
+        # Step 4: Get disease metadata
+        disease_info = get_disease_by_class(class_id)
+
+        if not disease_info:
+            raise ValueError(f"Unknown disease class: {class_id}")
+
+        # Step 5: Calculate severity based on confidence
+        if confidence > 0.95:
+            severity_level = 'Critical'
+        elif confidence > 0.85:
+            severity_level = disease_info.get('severity', 'High')
+        elif confidence > 0.70:
+            severity_level = 'Medium'
+        else:
+            severity_level = 'Low'
+
+        # Step 6: Calculate affected area percentage
+        # Higher confidence = higher affected area
+        affected_area = min(confidence * 100, 95.0)
+
+        # Step 7: Generate detection ID
+        detection_id = str(uuid.uuid4())
+
+        # Step 8: Construct result
+        result = {
+            'detection_id': detection_id,
+            'disease_name': disease_info.get('name', 'Unknown'),
+            'disease_class': class_id,
+            'scientific_name': disease_info.get('scientific_name', ''),
+            'description': disease_info.get('description', ''),
+            'confidence': round(confidence, 4),
+            'severity': severity_level,
+            'affected_area_percentage': round(affected_area, 2),
+            'symptoms': disease_info.get('symptoms', []),
+            'causes': disease_info.get('causes', []),
+            'treatments': disease_info.get('treatments', []),
+            'recommendations': disease_info.get('recommendations', []),
+            'user_id': user_id,
+            'field_id': field_id,
+            'batch_id': batch_id,
+            'timestamp': datetime.utcnow().isoformat(),
+            'model_info': {
+                'type': 'TFLite',
+                'input_size': IMG_SIZE,
+                'num_classes': 6
+            },
+            'status': 'success'
+        }
+
+        logger.info(f"✅ Disease detected: {disease_info.get('name')} ({confidence:.2%} confidence)")
+        return result
+
+    except ValueError as ve:
+        logger.error(f"⚠️ Validation error: {ve}")
+        return {
+            'status': 'error',
+            'message': str(ve),
+            'error_type': 'validation_error'
+        }
+    except Exception as e:
+        logger.error(f"❌ Disease detection failed: {e}", exc_info=True)
+        return {
+            'status': 'error',
+            'message': f"Detection failed: {str(e)}",
+            'error_type': 'detection_error'
+        }
+
+def get_disease_details(disease_name: str) -> Dict[str, Any]:
+    """Get detailed info about a disease by name"""
+    for disease_info in DISEASE_CLASSES.values():
+        if disease_info['name'].lower() == disease_name.lower():
+            return disease_info
+    return {}

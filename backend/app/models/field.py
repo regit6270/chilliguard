@@ -1,6 +1,9 @@
 """Field data model"""
+from __future__ import annotations
+
 from datetime import datetime
-from typing import Optional, Dict, Any, Tuple
+from typing import Any, Dict, Optional, Tuple
+
 
 class Field:
     """Field model representing a farm plot"""
@@ -15,8 +18,8 @@ class Field:
         location: Optional[Tuple[float, float]] = None,  # (lat, lon)
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
-        **kwargs
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.field_id = field_id
         self.user_id = user_id
         self.field_name = field_name
@@ -42,7 +45,9 @@ class Field:
         }
 
         if self.location:
-            data['location'] = {'lat': self.location[0], 'lon': self.location[1]}
+            data['location'] = {
+                'lat': self.location[0],
+                'lon': self.location[1]}
 
         return data
 
@@ -50,8 +55,10 @@ class Field:
     def from_dict(data: Dict[str, Any]) -> 'Field':
         """Create Field from Firestore document"""
         if 'location' in data and isinstance(data['location'], dict):
-            data['location'] = (data['location'].get('lat'), data['location'].get('lon'))
+            data['location'] = (
+                data['location'].get('lat'),
+                data['location'].get('lon'))
         return Field(**data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Field {self.field_id} - {self.field_name}>"

@@ -1,11 +1,15 @@
-from app.core.database import db
-from app.config import Config
-from app.services.sensor_data_service import get_latest_sensor_data
+from __future__ import annotations
+
 import logging
+from typing import Any, Dict, List, Optional
+
+from app.core.config import Config
+from app.services.sensor_data_service import get_latest_sensor_data
 
 logger = logging.getLogger(__name__)
 
-def check_feasibility(field_id, crop_type, user_id):
+
+def check_feasibility(field_id: str, crop_type: str, user_id: str) -> Dict[str, Any]:
     """
     Check if soil is feasible for given crop
 
@@ -23,8 +27,8 @@ def check_feasibility(field_id, crop_type, user_id):
         requirements = get_crop_requirements(crop_type)
 
         # Calculate feasibility for each parameter
-        scores = {}
-        breakdown = {}
+        scores: Dict[str, float] = {}
+        breakdown: Dict[str, Dict[str, Any]] = {}
 
         for param, (min_val, max_val) in requirements.items():
             value = sensor_data.get(param)
@@ -81,15 +85,16 @@ def check_feasibility(field_id, crop_type, user_id):
             'crop_type': crop_type
         }
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error checking feasibility: {str(e)}')
         raise
 
-def get_crop_requirements(crop_type):
+
+def get_crop_requirements(crop_type: str) -> Dict[str, tuple[float, float]]:
     """Get crop-specific requirements"""
 
     # Currently only supports chilli, but designed for extensibility
-    requirements = {
+    requirements: Dict[str, Dict[str, tuple[float, float]]] = {
         'chilli': {
             'ph': (Config.CHILLI_PH_MIN, Config.CHILLI_PH_MAX),
             'nitrogen': (Config.CHILLI_N_MIN, Config.CHILLI_N_MAX),
@@ -102,14 +107,15 @@ def get_crop_requirements(crop_type):
 
     return requirements.get(crop_type, requirements['chilli'])
 
-def get_improvement_recommendations(field_id, user_id):
+
+def get_improvement_recommendations(field_id: str, user_id: str) -> List[Dict[str, Any]]:
     """Get soil improvement recommendations based on feasibility check"""
 
     try:
         # Get feasibility results
         feasibility = check_feasibility(field_id, 'chilli', user_id)
 
-        recommendations = []
+        recommendations: List[Dict[str, Any]] = []
 
         # Generate recommendations for each parameter
         for param, data in feasibility['breakdown'].items():
@@ -123,11 +129,12 @@ def get_improvement_recommendations(field_id, user_id):
 
         return recommendations
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting recommendations: {str(e)}')
         raise
 
-def _generate_parameter_recommendation(param, data):
+
+def _generate_parameter_recommendation(param: str, data: Dict[str, Any]) -> Optional[Dict[str, Any]]:
     """Generate specific recommendation for a parameter"""
 
     recommendations_db = {

@@ -1,109 +1,93 @@
-"""
-Knowledge Base API Endpoints
-Provides educational content, articles, disease information, and FAQs
-"""
-from datetime import datetime
-from typing import Dict, List
-from flask import Blueprint, request, jsonify
+"""Knowledge base API endpoints for articles and FAQs."""
+from __future__ import annotations
+
 import logging
+from typing import Any, Dict, List, Tuple
+
+from flask import Blueprint, Response, jsonify, request
 
 # Initialize blueprint
-knowledge_base_bp = Blueprint('knowledge_base', __name__, url_prefix='/api/v1')
+knowledge_base_bp = Blueprint('knowledge_base', __name__, url_prefix='/knowledge')
 
 # Configure logging
 logger = logging.getLogger(__name__)
 
 # In-memory knowledge base (move to Firestore in production)
-KNOWLEDGE_BASE = {
-    "articles": [
-        {
-            "article_id": "art_001",
-            "title": "Understanding Chilli Leaf Spot Disease",
-            "title_hi": "मिर्च पत्ती धब्बा रोग को समझना",
-            "category": "diseases",
-            "content": "Leaf spot is one of the most common diseases affecting chilli crops...",
-            "content_hi": "पत्ती धब्बा मिर्च की फसलों को प्रभावित करने वाली सबसे आम बीमारियों में से एक है...",
-            "author": "ICAR Research",
-            "image_url": "https://storage.googleapis.com/chilliguard/articles/leaf-spot.jpg",
-            "tags": ["leaf-spot", "disease", "prevention"],
-            "reading_time": "5 min",
-            "published_date": "2024-01-15",
-            "language": "en"
-        },
-        {
-            "article_id": "art_002",
-            "title": "Optimal Soil pH for Chilli Cultivation",
-            "title_hi": "मिर्च की खेती के लिए उपयुक्त मृदा pH",
-            "category": "soil",
-            "content": "Maintaining proper soil pH is crucial for chilli growth...",
-            "content_hi": "मिर्च के विकास के लिए उचित मृदा pH बनाए रखना महत्वपूर्ण है...",
-            "author": "Agricultural Extension Services",
-            "tags": ["soil-health", "pH", "nutrients"],
-            "reading_time": "4 min",
-            "published_date": "2024-02-10",
-            "language": "en"
-        },
-        {
-            "article_id": "art_003",
-            "title": "Organic Pest Control Methods",
-            "title_hi": "जैविक कीट नियंत्रण विधियाँ",
-            "category": "pest-control",
-            "content": "Learn natural pest control without harmful chemicals...",
-            "content_hi": "हानिकारक रसायनों के बिना प्राकृतिक कीट नियंत्रण सीखें...",
-            "author": "Organic Farming Council",
-            "tags": ["organic", "pest-control", "sustainable"],
-            "reading_time": "7 min",
-            "published_date": "2024-03-05",
-            "language": "en"
-        }
-    ],
-    "diseases": [
-        {
-            "disease_id": "dis_001",
-            "name": "Anthracnose",
-            "name_hi": "एन्थ्रेक्नोज",
-            "symptoms": "Dark, sunken lesions on fruits and leaves",
-            "symptoms_hi": "फल और पत्तियों पर गहरे, धंसे हुए घाव",
-            "causes": "Fungal infection (Colletotrichum species)",
-            "prevention": "Remove infected plants, improve air circulation, avoid overhead irrigation",
-            "treatment_chemical": "Apply copper-based fungicides",
-            "treatment_organic": "Neem oil spray, bio-fungicides",
-            "images": ["anthracnose1.jpg", "anthracnose2.jpg"]
-        },
-        {
-            "disease_id": "dis_002",
-            "name": "Powdery Mildew",
-            "name_hi": "चूर्णिल आसिता",
-            "symptoms": "White powdery coating on leaves",
-            "symptoms_hi": "पत्तियों पर सफ़ेद पाउडर जैसी परत",
-            "causes": "Fungal infection (Leveillula taurica)",
-            "prevention": "Maintain low humidity, adequate spacing",
-            "treatment_chemical": "Sulfur-based fungicides",
-            "treatment_organic": "Baking soda solution, milk spray",
-            "images": ["powdery-mildew1.jpg"]
-        }
-    ],
-    "faqs": [
-        {
-            "question": "When should I apply the first fertilizer dose?",
-            "question_hi": "मुझे पहली खाद की खुराक कब लगानी चाहिए?",
-            "answer": "Apply first dose 15-20 days after transplanting",
-            "answer_hi": "रोपण के 15-20 दिन बाद पहली खुराक लगाएं",
-            "category": "fertilization"
-        },
-        {
-            "question": "How do I identify powdery mildew early?",
-            "question_hi": "मैं चूर्णिल आसिता को जल्दी कैसे पहचानूं?",
-            "answer": "Look for white powdery spots on leaf surfaces",
-            "answer_hi": "पत्ती की सतह पर सफ़ेद पाउडर जैसे धब्बे देखें",
-            "category": "disease-identification"
-        }
-    ]
-}
+KNOWLEDGE_BASE = {"articles": [{"article_id": "art_001",
+                                "title": "Understanding Chilli Leaf Spot Disease",
+                                "title_hi": "मिर्च पत्ती धब्बा रोग को समझना",
+                                "category": "diseases",
+                                "content": "Leaf spot is one of the most common diseases affecting chilli crops...",
+                                "content_hi": "पत्ती धब्बा मिर्च की फसलों को प्रभावित करने वाली सबसे आम बीमारियों में से एक है...",
+                                "author": "ICAR Research",
+                                "image_url": "https://storage.googleapis.com/chilliguard/articles/leaf-spot.jpg",
+                                "tags": ["leaf-spot",
+                                            "disease",
+                                            "prevention"],
+                                "reading_time": "5 min",
+                                "published_date": "2024-01-15",
+                                "language": "en"},
+                               {"article_id": "art_002",
+                                "title": "Optimal Soil pH for Chilli Cultivation",
+                                "title_hi": "मिर्च की खेती के लिए उपयुक्त मृदा pH",
+                                "category": "soil",
+                                "content": "Maintaining proper soil pH is crucial for chilli growth...",
+                                "content_hi": "मिर्च के विकास के लिए उचित मृदा pH बनाए रखना महत्वपूर्ण है...",
+                                "author": "Agricultural Extension Services",
+                                "tags": ["soil-health",
+                                          "pH",
+                                          "nutrients"],
+                                "reading_time": "4 min",
+                                "published_date": "2024-02-10",
+                                "language": "en"},
+                               {"article_id": "art_003",
+                                "title": "Organic Pest Control Methods",
+                                "title_hi": "जैविक कीट नियंत्रण विधियाँ",
+                                "category": "pest-control",
+                                "content": "Learn natural pest control without harmful chemicals...",
+                                "content_hi": "हानिकारक रसायनों के बिना प्राकृतिक कीट नियंत्रण सीखें...",
+                                "author": "Organic Farming Council",
+                                "tags": ["organic",
+                                         "pest-control",
+                                         "sustainable"],
+                                "reading_time": "7 min",
+                                "published_date": "2024-03-05",
+                                "language": "en"}],
+                  "diseases": [{"disease_id": "dis_001",
+                                "name": "Anthracnose",
+                                "name_hi": "एन्थ्रेक्नोज",
+                                "symptoms": "Dark, sunken lesions on fruits and leaves",
+                                "symptoms_hi": "फल और पत्तियों पर गहरे, धंसे हुए घाव",
+                                "causes": "Fungal infection (Colletotrichum species)",
+                                "prevention": "Remove infected plants, improve air circulation, avoid overhead irrigation",
+                                "treatment_chemical": "Apply copper-based fungicides",
+                                "treatment_organic": "Neem oil spray, bio-fungicides",
+                                "images": ["anthracnose1.jpg",
+                                           "anthracnose2.jpg"]},
+                               {"disease_id": "dis_002",
+                                "name": "Powdery Mildew",
+                                "name_hi": "चूर्णिल आसिता",
+                                "symptoms": "White powdery coating on leaves",
+                                "symptoms_hi": "पत्तियों पर सफ़ेद पाउडर जैसी परत",
+                                "causes": "Fungal infection (Leveillula taurica)",
+                                "prevention": "Maintain low humidity, adequate spacing",
+                                "treatment_chemical": "Sulfur-based fungicides",
+                                "treatment_organic": "Baking soda solution, milk spray",
+                                "images": ["powdery-mildew1.jpg"]}],
+                  "faqs": [{"question": "When should I apply the first fertilizer dose?",
+                            "question_hi": "मुझे पहली खाद की खुराक कब लगानी चाहिए?",
+                            "answer": "Apply first dose 15-20 days after transplanting",
+                            "answer_hi": "रोपण के 15-20 दिन बाद पहली खुराक लगाएं",
+                            "category": "fertilization"},
+                           {"question": "How do I identify powdery mildew early?",
+                            "question_hi": "मैं चूर्णिल आसिता को जल्दी कैसे पहचानूं?",
+                            "answer": "Look for white powdery spots on leaf surfaces",
+                            "answer_hi": "पत्ती की सतह पर सफ़ेद पाउडर जैसे धब्बे देखें",
+                            "category": "disease-identification"}]}
 
 
 @knowledge_base_bp.route('/articles', methods=['GET'])
-def list_articles():
+def list_articles() -> Tuple[Response, int]:
     """
     List knowledge base articles with optional filtering
     Query params: category, language, limit
@@ -113,7 +97,7 @@ def list_articles():
         language = request.args.get('language', 'en')
         limit = int(request.args.get('limit', 20))
 
-        articles = KNOWLEDGE_BASE['articles']
+        articles: List[Dict[str, Any]] = KNOWLEDGE_BASE['articles']
 
         # Filter by category
         if category:
@@ -126,7 +110,7 @@ def list_articles():
         articles = articles[:limit]
 
         # Format response based on language
-        formatted_articles = []
+        formatted_articles: List[Dict[str, Any]] = []
         for article in articles:
             formatted = {
                 'article_id': article['article_id'],
@@ -146,7 +130,7 @@ def list_articles():
             'articles': formatted_articles
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error listing articles: {str(e)}")
         return jsonify({
             'status': 'error',
@@ -155,7 +139,7 @@ def list_articles():
 
 
 @knowledge_base_bp.route('/articles/<article_id>', methods=['GET'])
-def get_article(article_id: str):
+def get_article(article_id: str) -> Tuple[Response, int]:
     """Get detailed article by ID"""
     try:
         language = request.args.get('language', 'en')
@@ -163,8 +147,7 @@ def get_article(article_id: str):
         # Find article
         article = next(
             (a for a in KNOWLEDGE_BASE['articles'] if a['article_id'] == article_id),
-            None
-        )
+            None)
 
         if not article:
             return jsonify({
@@ -190,7 +173,7 @@ def get_article(article_id: str):
             'article': response
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error fetching article: {str(e)}")
         return jsonify({
             'status': 'error',
@@ -199,7 +182,7 @@ def get_article(article_id: str):
 
 
 @knowledge_base_bp.route('/articles/search', methods=['GET'])
-def search_articles():
+def search_articles() -> Tuple[Response, int]:
     """
     Search articles by keyword
     Query params: q (query string), language
@@ -215,7 +198,7 @@ def search_articles():
             }), 400
 
         # Simple keyword search in title and tags
-        results = []
+        results: List[Dict[str, Any]] = []
         for article in KNOWLEDGE_BASE['articles']:
             title = article.get(f'title_{language}', article['title']).lower()
             tags = ' '.join(article['tags']).lower()
@@ -236,7 +219,7 @@ def search_articles():
             'results': results
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error searching articles: {str(e)}")
         return jsonify({
             'status': 'error',
@@ -245,12 +228,12 @@ def search_articles():
 
 
 @knowledge_base_bp.route('/diseases', methods=['GET'])
-def list_diseases():
+def list_diseases() -> Tuple[Response, int]:
     """Get disease encyclopedia"""
     try:
         language = request.args.get('language', 'en')
 
-        diseases = []
+        diseases: List[Dict[str, Any]] = []
         for disease in KNOWLEDGE_BASE['diseases']:
             diseases.append({
                 'disease_id': disease['disease_id'],
@@ -266,7 +249,7 @@ def list_diseases():
             'diseases': diseases
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error listing diseases: {str(e)}")
         return jsonify({
             'status': 'error',
@@ -275,15 +258,14 @@ def list_diseases():
 
 
 @knowledge_base_bp.route('/diseases/<disease_id>', methods=['GET'])
-def get_disease_details(disease_id: str):
+def get_disease_details(disease_id: str) -> Tuple[Response, int]:
     """Get detailed disease information"""
     try:
         language = request.args.get('language', 'en')
 
         disease = next(
             (d for d in KNOWLEDGE_BASE['diseases'] if d['disease_id'] == disease_id),
-            None
-        )
+            None)
 
         if not disease:
             return jsonify({
@@ -293,21 +275,24 @@ def get_disease_details(disease_id: str):
 
         response = {
             'disease_id': disease['disease_id'],
-            'name': disease.get(f'name_{language}', disease['name']),
-            'symptoms': disease.get(f'symptoms_{language}', disease['symptoms']),
+            'name': disease.get(
+                f'name_{language}',
+                disease['name']),
+            'symptoms': disease.get(
+                f'symptoms_{language}',
+                disease['symptoms']),
             'causes': disease['causes'],
             'prevention': disease['prevention'],
             'treatment_chemical': disease['treatment_chemical'],
             'treatment_organic': disease['treatment_organic'],
-            'images': disease['images']
-        }
+            'images': disease['images']}
 
         return jsonify({
             'status': 'success',
             'disease': response
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error fetching disease: {str(e)}")
         return jsonify({
             'status': 'error',
@@ -316,19 +301,19 @@ def get_disease_details(disease_id: str):
 
 
 @knowledge_base_bp.route('/faqs', methods=['GET'])
-def list_faqs():
+def list_faqs() -> Tuple[Response, int]:
     """Get frequently asked questions"""
     try:
         language = request.args.get('language', 'en')
         category = request.args.get('category')
 
-        faqs = KNOWLEDGE_BASE['faqs']
+        faqs: List[Dict[str, Any]] = KNOWLEDGE_BASE['faqs']
 
         # Filter by category
         if category:
             faqs = [f for f in faqs if f['category'] == category]
 
-        formatted_faqs = []
+        formatted_faqs: List[Dict[str, Any]] = []
         for faq in faqs:
             formatted_faqs.append({
                 'question': faq.get(f'question_{language}', faq['question']),
@@ -342,7 +327,7 @@ def list_faqs():
             'faqs': formatted_faqs
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error fetching FAQs: {str(e)}")
         return jsonify({
             'status': 'error',
@@ -351,7 +336,7 @@ def list_faqs():
 
 
 @knowledge_base_bp.route('/recommendations', methods=['POST'])
-def get_recommendations():
+def get_recommendations() -> Tuple[Response, int]:
     """
     Get personalized article recommendations based on farmer activity
     Request body: {
@@ -361,13 +346,13 @@ def get_recommendations():
     }
     """
     try:
-        data = request.get_json()
+        data: Dict[str, Any] = request.get_json(silent=True) or {}
         recent_diseases = data.get('recent_diseases', [])
         recent_issues = data.get('recent_issues', [])
         language = data.get('language', 'en')
 
         # Simple tag-based recommendation
-        recommendations = []
+        recommendations: List[Dict[str, Any]] = []
         all_tags = recent_diseases + recent_issues
 
         for article in KNOWLEDGE_BASE['articles']:
@@ -391,7 +376,7 @@ def get_recommendations():
             'recommendations': recommendations
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f"Error generating recommendations: {str(e)}")
         return jsonify({
             'status': 'error',

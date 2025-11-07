@@ -1,17 +1,25 @@
 """Fields management API endpoints"""
-from flask import Blueprint, request, jsonify
-from app.core.security import require_auth, get_user_id
-from app.core.database import db
+from __future__ import annotations
+
 import logging
 import uuid
+from datetime import datetime
+from typing import Any, Dict, Tuple
+
+from flask import Blueprint, Response, jsonify, request
+
+from app.core.database import db
+from app.core.security import get_user_id, require_auth
+
 
 logger = logging.getLogger(__name__)
 
 bp = Blueprint('fields', __name__, url_prefix='/fields')
 
+
 @bp.route('', methods=['GET'])
 @require_auth
-def get_fields():
+def get_fields() -> Tuple[Response, int]:
     """Get all fields for user"""
     try:
         user_id = get_user_id()
@@ -27,14 +35,14 @@ def get_fields():
             'total': len(fields)
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting fields: {str(e)}')
         return jsonify({'error': 'Failed to fetch fields'}), 500
 
 
 @bp.route('/<field_id>', methods=['GET'])
 @require_auth
-def get_field(field_id):
+def get_field(field_id: str) -> Tuple[Response, int]:
     """Get specific field details"""
     try:
         user_id = get_user_id()
@@ -49,18 +57,18 @@ def get_field(field_id):
 
         return jsonify(field), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting field: {str(e)}')
         return jsonify({'error': 'Failed to fetch field'}), 500
 
 
 @bp.route('', methods=['POST'])
 @require_auth
-def create_field():
+def create_field() -> Tuple[Response, int]:
     """Create new field"""
     try:
         user_id = get_user_id()
-        data = request.get_json()
+        data: Dict[str, Any] = request.get_json(silent=True) or {}
 
         # Validate required fields
         required = ['field_name', 'area']
@@ -79,7 +87,8 @@ def create_field():
             'updated_at': datetime.utcnow()
         }
 
-        field_id = db.create_document('fields', field_data, field_data['field_id'])
+        field_id = db.create_document(
+            'fields', field_data, field_data['field_id'])
 
         return jsonify({
             'success': True,
@@ -87,18 +96,18 @@ def create_field():
             'message': 'Field created successfully'
         }), 201
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error creating field: {str(e)}')
         return jsonify({'error': 'Failed to create field'}), 500
 
 
 @bp.route('/<field_id>', methods=['PUT'])
 @require_auth
-def update_field(field_id):
+def update_field(field_id: str) -> Tuple[Response, int]:
     """Update field information"""
     try:
         user_id = get_user_id()
-        data = request.get_json()
+        data: Dict[str, Any] = request.get_json(silent=True) or {}
 
         # Verify ownership
         field = db.get_document('fields', field_id)
@@ -106,12 +115,12 @@ def update_field(field_id):
             return jsonify({'error': 'Unauthorized'}), 403
 
         # Update allowed fields
-        update_data = {}
+        update_data: Dict[str, Any] = {}
         allowed_fields = ['field_name', 'area', 'soil_type', 'location']
 
-        for field in allowed_fields:
-            if field in data:
-                update_data[field] = data[field]
+        for field_key in allowed_fields:
+            if field_key in data:
+                update_data[field_key] = data[field_key]
 
         update_data['updated_at'] = datetime.utcnow()
 
@@ -122,6 +131,6 @@ def update_field(field_id):
             'message': 'Field updated successfully'
         }), 200
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error updating field: {str(e)}')
         return jsonify({'error': 'Failed to update field'}), 500

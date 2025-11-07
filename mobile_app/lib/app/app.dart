@@ -17,6 +17,7 @@ import '../presentation/blocs/disease_detection/disease_detection_bloc.dart';
 import '../presentation/blocs/language/language_bloc.dart';
 import '../presentation/blocs/language/language_event.dart'; // ADD THIS
 import '../presentation/blocs/language/language_state.dart'; // ADD THIS
+import '../presentation/blocs/recommendation/recommendation_bloc.dart';
 import '../presentation/blocs/sensor/sensor_bloc.dart';
 import '../presentation/blocs/soil_health/soil_health_bloc.dart';
 import 'routes/app_router.dart';
@@ -58,6 +59,9 @@ class ChilliGuardApp extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => getIt<AlertBloc>(),
+        ),
+        BlocProvider(
+          create: (_) => getIt<RecommendationBloc>(),
         ),
       ],
       child: BlocBuilder<LanguageBloc, LanguageState>(

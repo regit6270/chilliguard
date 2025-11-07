@@ -19,4 +19,21 @@ abstract class SensorRepository {
   /// Get cached readings (offline)
   Future<Either<Failure, List<SensorReading>>> getCachedReadings(
       String fieldId);
+
+  // ============================================
+  // ADDITIONAL METHODS FOR BLOC USAGE
+  // ============================================
+
+  /// Get latest reading (direct - throws on error)
+  Future<SensorReading?> getLatestReadingDirect(String fieldId);
+
+  /// Get readings between dates
+  Future<List<SensorReading>> getReadings(
+    String fieldId,
+    DateTime startDate,
+    DateTime endDate,
+  );
+
+  /// Get real-time sensor stream
+  Stream<SensorReading> getSensorStream(String fieldId);
 }

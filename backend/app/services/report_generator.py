@@ -1,18 +1,24 @@
 """Report generation service for end-cycle and analytical reports"""
-import logging
-from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.lib import colors
-from reportlab.lib.units import inch
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, Image
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from __future__ import annotations
+
 import io
+import logging
+from datetime import datetime
+from typing import Any, Dict, List
+
+from reportlab.lib import colors  # type: ignore[import-untyped]
+from reportlab.lib.enums import TA_CENTER  # type: ignore[import-untyped]
+from reportlab.lib.pagesizes import letter  # type: ignore[import-untyped]
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet  # type: ignore[import-untyped]
+from reportlab.lib.units import inch  # type: ignore[import-untyped]
+from reportlab.platypus import (Paragraph, SimpleDocTemplate, Spacer,  # type: ignore[import-untyped]
+                                Table, TableStyle)
+
 from app.core.database import db
 from app.core.firebase import get_storage_bucket
 
 logger = logging.getLogger(__name__)
+
 
 def generate_end_cycle_report(batch_id: str, user_id: str) -> Dict[str, Any]:
     """
@@ -32,8 +38,9 @@ def generate_end_cycle_report(batch_id: str, user_id: str) -> Dict[str, Any]:
             raise ValueError('Batch not found or unauthorized')
 
         # Fetch related data
-        field = db.get_document('fields', batch.get('field_id'))
-        user = db.get_document('users', user_id)
+        field_id = batch.get('field_id')
+        field = db.get_document('fields', field_id) if isinstance(field_id, str) else None
+        user = db.get_document('users', user_id) or {}
 
         # Get disease detections for this batch
         detections = db.query_collection(
@@ -50,13 +57,24 @@ def generate_end_cycle_report(batch_id: str, user_id: str) -> Dict[str, Any]:
         )
 
         # Get sensor data summary
-        sensor_summary = _get_sensor_summary(batch.get('field_id'), batch)
+        if isinstance(field_id, str):
+            sensor_summary = _get_sensor_summary(field_id, batch)
+        else:
+            sensor_summary = {'status': 'field_unavailable'}
 
         # Calculate metrics
-        metrics = _calculate_batch_metrics(batch, detections, treatments, sensor_summary)
+        metrics = _calculate_batch_metrics(
+            batch, detections, treatments, sensor_summary)
 
         # Generate PDF
-        pdf_url = _generate_pdf_report(batch, field, user, detections, treatments, sensor_summary, metrics)
+        pdf_url = _generate_pdf_report(
+            batch,
+            field or {},
+            user,
+            detections,
+            treatments,
+            sensor_summary,
+            metrics)
 
         # Store report record
         report_data = {
@@ -78,12 +96,13 @@ def generate_end_cycle_report(batch_id: str, user_id: str) -> Dict[str, Any]:
             'generated_at': datetime.utcnow().isoformat()
         }
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error generating end-cycle report: {str(e)}')
         raise
 
 
-def generate_batch_comparison(batch_ids: List[str], user_id: str) -> Dict[str, Any]:
+def generate_batch_comparison(
+        batch_ids: List[str], user_id: str) -> Dict[str, Any]:
     """
     Generate comparison report for multiple batches
 
@@ -95,7 +114,7 @@ def generate_batch_comparison(batch_ids: List[str], user_id: str) -> Dict[str, A
         Dictionary with comparison data
     """
     try:
-        comparison_data = []
+        comparison_data: List[Dict[str, Any]] = []
 
         for batch_id in batch_ids:
             batch = db.get_document('crop_batches', batch_id)
@@ -133,27 +152,38 @@ def generate_batch_comparison(batch_ids: List[str], user_id: str) -> Dict[str, A
             'generated_at': datetime.utcnow().isoformat()
         }
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error generating batch comparison: {str(e)}')
         raise
 
 
-def _get_sensor_summary(field_id: str, batch: Dict[str, Any]) -> Dict[str, Any]:
+def _get_sensor_summary(
+        field_id: str, batch: Dict[str, Any]) -> Dict[str, Any]:
     """Get sensor data summary for batch duration"""
     try:
-        planting_date = batch.get('planting_date')
-        harvest_date = batch.get('actual_harvest_date') or datetime.utcnow().date()
+        planting_date_value = batch.get('planting_date')
+        harvest_date_value = batch.get('actual_harvest_date')
 
-        # Convert dates to datetime for comparison
-        if isinstance(planting_date, str):
-            from dateutil import parser
-            planting_date = parser.parse(planting_date).date()
-        if isinstance(harvest_date, str):
-            from dateutil import parser
-            harvest_date = parser.parse(harvest_date).date()
+        from dateutil import parser
 
-        start_datetime = datetime.combine(planting_date, datetime.min.time())
-        end_datetime = datetime.combine(harvest_date, datetime.max.time())
+        if isinstance(planting_date_value, str):
+            planting_date_parsed = parser.parse(planting_date_value).date()
+        elif isinstance(planting_date_value, datetime):
+            planting_date_parsed = planting_date_value.date()
+        else:
+            planting_date_parsed = datetime.utcnow().date()
+
+        if isinstance(harvest_date_value, str):
+            harvest_date_parsed = parser.parse(harvest_date_value).date()
+        elif isinstance(harvest_date_value, datetime):
+            harvest_date_parsed = harvest_date_value.date()
+        elif harvest_date_value is None:
+            harvest_date_parsed = datetime.utcnow().date()
+        else:
+            harvest_date_parsed = harvest_date_value
+
+        start_datetime = datetime.combine(planting_date_parsed, datetime.min.time())
+        end_datetime = datetime.combine(harvest_date_parsed, datetime.max.time())
 
         # Get all sensor readings in date range
         readings = db.query_collection(
@@ -169,12 +199,20 @@ def _get_sensor_summary(field_id: str, batch: Dict[str, Any]) -> Dict[str, Any]:
             return {'status': 'no_data'}
 
         # Calculate averages
-        ph_values = [r.get('ph') for r in readings if r.get('ph')]
-        n_values = [r.get('nitrogen') for r in readings if r.get('nitrogen')]
-        p_values = [r.get('phosphorus') for r in readings if r.get('phosphorus')]
-        k_values = [r.get('potassium') for r in readings if r.get('potassium')]
-        moisture_values = [r.get('moisture') for r in readings if r.get('moisture')]
-        temp_values = [r.get('temperature') for r in readings if r.get('temperature')]
+        def _collect_numeric(key: str) -> List[float]:
+            values: List[float] = []
+            for record in readings:
+                value = record.get(key)
+                if isinstance(value, (int, float)):
+                    values.append(float(value))
+            return values
+
+        ph_values = _collect_numeric('ph')
+        n_values = _collect_numeric('nitrogen')
+        p_values = _collect_numeric('phosphorus')
+        k_values = _collect_numeric('potassium')
+        moisture_values = _collect_numeric('moisture')
+        temp_values = _collect_numeric('temperature')
 
         return {
             'status': 'available',
@@ -184,37 +222,57 @@ def _get_sensor_summary(field_id: str, batch: Dict[str, Any]) -> Dict[str, Any]:
             'avg_phosphorus': sum(p_values) / len(p_values) if p_values else 0,
             'avg_potassium': sum(k_values) / len(k_values) if k_values else 0,
             'avg_moisture': sum(moisture_values) / len(moisture_values) if moisture_values else 0,
-            'avg_temperature': sum(temp_values) / len(temp_values) if temp_values else 0
-        }
+            'avg_temperature': sum(temp_values) / len(temp_values) if temp_values else 0}
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error getting sensor summary: {str(e)}')
         return {'status': 'error'}
 
 
-def _calculate_batch_metrics(batch: Dict[str, Any], detections: List, treatments: List, sensor_summary: Dict) -> Dict[str, Any]:
+def _calculate_batch_metrics(
+    batch: Dict[str, Any],
+    detections: List[Dict[str, Any]],
+    treatments: List[Dict[str, Any]],
+    sensor_summary: Dict[str, Any],
+) -> Dict[str, Any]:
     """Calculate comprehensive batch metrics"""
 
     # Calculate duration
-    planting_date = batch.get('planting_date')
-    harvest_date = batch.get('actual_harvest_date') or datetime.utcnow().date()
+    from dateutil import parser
 
-    if isinstance(planting_date, str):
-        from dateutil import parser
-        planting_date = parser.parse(planting_date).date()
-    if isinstance(harvest_date, str):
-        from dateutil import parser
-        harvest_date = parser.parse(harvest_date).date()
+    planting_date_value = batch.get('planting_date')
+    harvest_date_value = batch.get('actual_harvest_date')
+
+    if isinstance(planting_date_value, str):
+        planting_date = parser.parse(planting_date_value).date()
+    elif isinstance(planting_date_value, datetime):
+        planting_date = planting_date_value.date()
+    else:
+        planting_date = datetime.utcnow().date()
+
+    if isinstance(harvest_date_value, str):
+        harvest_date = parser.parse(harvest_date_value).date()
+    elif isinstance(harvest_date_value, datetime):
+        harvest_date = harvest_date_value.date()
+    elif harvest_date_value is None:
+        harvest_date = datetime.utcnow().date()
+    else:
+        harvest_date = harvest_date_value
 
     duration_days = (harvest_date - planting_date).days
 
     # Disease statistics
     total_detections = len(detections)
-    unique_diseases = len(set(d.get('disease_name') for d in detections if d.get('disease_name') != 'healthy'))
+    unique_diseases = len(set(d.get('disease_name')
+                          for d in detections if d.get('disease_name') != 'healthy'))
 
     # Treatment statistics
     total_treatments = len(treatments)
-    treatment_cost = sum(t.get('cost', 0) for t in treatments if t.get('cost'))
+    treatment_cost = sum(
+        float(t['cost'])
+        for t in treatments
+        if isinstance(t.get('cost'), (int, float))
+    )
 
     # Health score journey
     health_score_final = batch.get('health_score', 100)
@@ -233,14 +291,21 @@ def _calculate_batch_metrics(batch: Dict[str, Any], detections: List, treatments
     }
 
 
-def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
-                        treatments: List, sensor_summary: Dict, metrics: Dict) -> str:
+def _generate_pdf_report(
+    batch: Dict[str, Any],
+    field: Dict[str, Any],
+    user: Dict[str, Any],
+    detections: List[Dict[str, Any]],
+    treatments: List[Dict[str, Any]],
+    sensor_summary: Dict[str, Any],
+    metrics: Dict[str, Any],
+) -> str:
     """Generate PDF report and upload to Cloud Storage"""
     try:
         # Create PDF in memory
         buffer = io.BytesIO()
         doc = SimpleDocTemplate(buffer, pagesize=letter)
-        story = []
+        story: List[Any] = []
         styles = getSampleStyleSheet()
 
         # Custom styles
@@ -263,7 +328,7 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
 
         # Title
         story.append(Paragraph('ChilliGuard - End Cycle Report', title_style))
-        story.append(Spacer(1, 0.2*inch))
+        story.append(Spacer(1, 0.2 * inch))
 
         # Farmer & Field Info
         story.append(Paragraph('Farmer & Field Information', heading_style))
@@ -276,7 +341,7 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
             ['Seed Variety:', batch.get('seed_variety', 'Unknown')]
         ]
 
-        farmer_table = Table(farmer_data, colWidths=[2*inch, 4*inch])
+        farmer_table = Table(farmer_data, colWidths=[2 * inch, 4 * inch])
         farmer_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#E8F5E9')),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
@@ -287,7 +352,7 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
         ]))
         story.append(farmer_table)
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Spacer(1, 0.3 * inch))
 
         # Cultivation Summary
         story.append(Paragraph('Cultivation Summary', heading_style))
@@ -299,7 +364,9 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
             ['Final Health Score:', f"{metrics.get('health_score_final', 0)}/100"]
         ]
 
-        cultivation_table = Table(cultivation_data, colWidths=[2*inch, 4*inch])
+        cultivation_table = Table(
+            cultivation_data, colWidths=[
+                2 * inch, 4 * inch])
         cultivation_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#E8F5E9')),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
@@ -310,7 +377,7 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
         ]))
         story.append(cultivation_table)
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Spacer(1, 0.3 * inch))
 
         # Disease & Treatment Summary
         story.append(Paragraph('Disease & Treatment Summary', heading_style))
@@ -321,7 +388,7 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
             ['Treatment Cost:', f"₹{metrics.get('treatment_cost', 0):.2f}"]
         ]
 
-        disease_table = Table(disease_data, colWidths=[2.5*inch, 3.5*inch])
+        disease_table = Table(disease_data, colWidths=[2.5 * inch, 3.5 * inch])
         disease_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#FFF3E0')),
             ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
@@ -332,11 +399,14 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
         ]))
         story.append(disease_table)
-        story.append(Spacer(1, 0.3*inch))
+        story.append(Spacer(1, 0.3 * inch))
 
         # Soil Health Summary
         if sensor_summary.get('status') == 'available':
-            story.append(Paragraph('Average Soil Health Parameters', heading_style))
+            story.append(
+                Paragraph(
+                    'Average Soil Health Parameters',
+                    heading_style))
             soil_data = [
                 ['pH:', f"{sensor_summary.get('avg_ph', 0):.2f}"],
                 ['Nitrogen (N):', f"{sensor_summary.get('avg_nitrogen', 0):.1f} kg/ha"],
@@ -346,7 +416,7 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
                 ['Temperature:', f"{sensor_summary.get('avg_temperature', 0):.1f}°C"]
             ]
 
-            soil_table = Table(soil_data, colWidths=[2*inch, 4*inch])
+            soil_table = Table(soil_data, colWidths=[2 * inch, 4 * inch])
             soil_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#E3F2FD')),
                 ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
@@ -359,12 +429,16 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
             story.append(soil_table)
 
         # Footer
-        story.append(Spacer(1, 0.5*inch))
-        story.append(Paragraph(
-            f'Report Generated: {datetime.utcnow().strftime("%B %d, %Y at %H:%M UTC")}',
-            styles['Normal']
-        ))
-        story.append(Paragraph('Powered by ChilliGuard - Smart Agriculture', styles['Normal']))
+        story.append(Spacer(1, 0.5 * inch))
+        story.append(
+            Paragraph(
+                f'Report Generated: {
+                    datetime.utcnow().strftime("%B %d, %Y at %H:%M UTC")}',
+                styles['Normal']))
+        story.append(
+            Paragraph(
+                'Powered by ChilliGuard - Smart Agriculture',
+                styles['Normal']))
 
         # Build PDF
         doc.build(story)
@@ -372,14 +446,19 @@ def _generate_pdf_report(batch: Dict, field: Dict, user: Dict, detections: List,
         # Upload to Cloud Storage
         buffer.seek(0)
         bucket = get_storage_bucket()
-        blob_name = f"reports/{user.get('user_id')}/{batch.get('batch_id')}_end_cycle_{datetime.utcnow().strftime('%Y%m%d')}.pdf"
+        user_identifier = user.get('user_id') or 'anonymous'
+        batch_identifier = batch.get('batch_id') or batch.get('id') or 'batch'
+        blob_name = (
+            f"reports/{user_identifier}/{batch_identifier}_end_cycle_"
+            f"{datetime.utcnow().strftime('%Y%m%d')}.pdf"
+        )
         blob = bucket.blob(blob_name)
         blob.upload_from_file(buffer, content_type='application/pdf')
         blob.make_public()
 
-        logger.info(f'Generated PDF report: {blob.public_url}')
-        return blob.public_url
+        logger.info('Generated PDF report: %s', blob.public_url)
+        return str(blob.public_url)
 
-    except Exception as e:
-        logger.error(f'Error generating PDF: {str(e)}')
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error('Error generating PDF: %s', str(e))
         raise

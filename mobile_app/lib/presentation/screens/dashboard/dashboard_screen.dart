@@ -141,10 +141,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // OLD: Bottom Navigation Bar (PRD Required)
       bottomNavigationBar:
           const ChilliGuardBottomNavigationBar(currentIndex: 0),
-      // OLD: Floating Action Button for Camera (PRD Required)
+      // Floating Action Button for Disease Detection
       floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/camera'),
-        tooltip: 'Scan Leaf',
+        onPressed: () => context.push('/disease-detection'),
+        tooltip: 'Detect Disease',
         child: const Icon(Icons.camera_alt),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -415,8 +415,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final actions = [
       {
         'icon': Icons.camera_alt,
-        'label': 'Scan Leaf',
-        'route': '/camera',
+        'label': 'Detect Disease',
+        'route': '/disease-detection',
         'color': Colors.green,
       },
       {

@@ -1,75 +1,67 @@
-from flask import Blueprint, request, jsonify
-from app.core.security import require_auth, get_user_id
-from app.services.sensor_data_service import (
-    get_latest_sensor_data,
-    get_sensor_history,
-    store_sensor_reading
-)
-import logging
-
-logger = logging.getLogger(__name__)
+from flask import Blueprint, jsonify, request
+from app.services.realtime_db import get_rtdb_service
 
 bp = Blueprint('sensors', __name__, url_prefix='/sensors')
 
+
 @bp.route('/latest', methods=['GET'])
-@require_auth
-def get_latest():
-    """Get latest sensor readings for a field"""
+def get_latest_sensor_reading():
+    """
+    Get latest sensor reading from RTDB (not Firestore)
+    Query param: field_id
+    """
+    field_id = request.args.get('field_id', 'field_123')
+
     try:
-        field_id = request.args.get('field_id')
-        if not field_id:
-            return jsonify({'error': 'field_id is required'}), 400
+        # Fetch from RTDB instead of Firestore
+        sensor_data = get_rtdb_service().get_latest_sensor_reading(field_id)
 
-        user_id = get_user_id()
-        data = get_latest_sensor_data(field_id, user_id)
+        if not sensor_data:
+            return jsonify({
+                'success': False,
+                'error': 'No sensor data found for this field'
+            }), 404
 
-        if not data:
-            return jsonify({'error': 'No sensor data found'}), 404
-
-        return jsonify(data), 200
+        return jsonify({
+            'success': True,
+            'data': sensor_data
+        }), 200
 
     except Exception as e:
-        logger.error(f'Error getting latest sensor data: {str(e)}')
-        return jsonify({'error': 'Failed to fetch sensor data'}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
 
 @bp.route('/history', methods=['GET'])
-@require_auth
-def get_history():
-    """Get historical sensor readings"""
+def get_sensor_history():
+    """
+    Get historical sensor readings from RTDB
+    Query params: field_id, duration (e.g., '7d', '14d', '30d')
+    """
+    field_id = request.args.get('field_id', 'field_123')
+    duration = request.args.get('duration', '7d')
+
+    # Parse duration
+    duration_days = int(duration.replace('d', ''))
+
     try:
-        field_id = request.args.get('field_id')
-        duration = request.args.get('duration', '7d')
+        # Fetch from RTDB
+        historical_data = get_rtdb_service().get_sensor_history(field_id, duration_days)
 
-        if not field_id:
-            return jsonify({'error': 'field_id is required'}), 400
-
-        user_id = get_user_id()
-        data = get_sensor_history(field_id, user_id, duration)
-
-        return jsonify(data), 200
+        return jsonify({
+            'success': True,
+            'data': {
+                'field_id': field_id,
+                'duration': duration,
+                'readings': historical_data,
+                'count': len(historical_data)
+            }
+        }), 200
 
     except Exception as e:
-        logger.error(f'Error getting sensor history: {str(e)}')
-        return jsonify({'error': 'Failed to fetch sensor history'}), 500
-
-@bp.route('/readings', methods=['POST'])
-def store_reading():
-    """Store sensor reading (called by IoT devices)"""
-    try:
-        data = request.get_json()
-
-        required_fields = ['device_id', 'field_id', 'sensor_type']
-        if not all(field in data for field in required_fields):
-            return jsonify({'error': 'Missing required fields'}), 400
-
-        result = store_sensor_reading(
-            data['field_id'],
-            data['sensor_type'],
-            data
-        )
-
-        return jsonify({'success': True, 'id': result}), 201
-
-    except Exception as e:
-        logger.error(f'Error storing sensor reading: {str(e)}')
-        return jsonify({'error': 'Failed to store sensor reading'}), 500
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500

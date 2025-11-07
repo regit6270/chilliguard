@@ -1,6 +1,9 @@
 """Crop batch data model"""
-from datetime import datetime, date
-from typing import Optional, Dict, Any
+from __future__ import annotations
+
+from datetime import date, datetime
+from typing import Any, Dict, Optional
+
 
 class CropBatch:
     """Crop batch model for tracking cultivation cycles"""
@@ -20,8 +23,8 @@ class CropBatch:
         health_score: float = 100.0,
         created_at: Optional[datetime] = None,
         updated_at: Optional[datetime] = None,
-        **kwargs
-    ):
+        **kwargs: Any,
+    ) -> None:
         self.batch_id = batch_id
         self.user_id = user_id
         self.field_id = field_id
@@ -46,7 +49,9 @@ class CropBatch:
             'user_id': self.user_id,
             'field_id': self.field_id,
             'crop_type': self.crop_type,
-            'planting_date': self.planting_date.isoformat() if isinstance(self.planting_date, date) else self.planting_date,
+            'planting_date': self.planting_date.isoformat() if isinstance(
+                self.planting_date,
+                date) else self.planting_date,
             'estimated_harvest_date': self.estimated_harvest_date.isoformat() if self.estimated_harvest_date else None,
             'actual_harvest_date': self.actual_harvest_date.isoformat() if self.actual_harvest_date else None,
             'area': self.area,
@@ -54,8 +59,7 @@ class CropBatch:
             'status': self.status,
             'health_score': self.health_score,
             'created_at': self.created_at,
-            'updated_at': self.updated_at
-        }
+            'updated_at': self.updated_at}
 
     @staticmethod
     def from_dict(data: Dict[str, Any]) -> 'CropBatch':
@@ -63,11 +67,15 @@ class CropBatch:
         # Convert ISO date strings back to date objects
         if 'planting_date' in data and isinstance(data['planting_date'], str):
             data['planting_date'] = date.fromisoformat(data['planting_date'])
-        if 'estimated_harvest_date' in data and isinstance(data['estimated_harvest_date'], str):
-            data['estimated_harvest_date'] = date.fromisoformat(data['estimated_harvest_date'])
-        if 'actual_harvest_date' in data and isinstance(data['actual_harvest_date'], str):
-            data['actual_harvest_date'] = date.fromisoformat(data['actual_harvest_date'])
+        if 'estimated_harvest_date' in data and isinstance(
+                data['estimated_harvest_date'], str):
+            data['estimated_harvest_date'] = date.fromisoformat(
+                data['estimated_harvest_date'])
+        if 'actual_harvest_date' in data and isinstance(
+                data['actual_harvest_date'], str):
+            data['actual_harvest_date'] = date.fromisoformat(
+                data['actual_harvest_date'])
         return CropBatch(**data)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<CropBatch {self.batch_id} - {self.crop_type} ({self.status})>"

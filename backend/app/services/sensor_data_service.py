@@ -1,15 +1,20 @@
 """Sensor data service for IoT sensor management"""
+from __future__ import annotations
+
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Any, List, Optional
+from typing import Any, Dict, List, Optional
+
 from app.core.database import db
-from app.models.sensor_reading import SensorReading
 
 logger = logging.getLogger(__name__)
 
-def get_latest_sensor_data(field_id: str, user_id: str) -> Optional[Dict[str, Any]]:
+
+def get_latest_sensor_data(
+    field_id: str, user_id: str) -> Optional[Dict[str, Any]]:
     """
     Get the latest sensor reading for a field
+    ⭐ FIX: Uses NO ORDER BY - sorts in Python to avoid index requirement
 
     Args:
         field_id: Field ID
@@ -25,19 +30,23 @@ def get_latest_sensor_data(field_id: str, user_id: str) -> Optional[Dict[str, An
             logger.warning(f'Unauthorized access to field {field_id} by user {user_id}')
             return None
 
-        # Query latest sensor reading
-        readings = db.query_collection(
+        # ⭐ FIX: Query WITHOUT order_by to avoid index
+        readings = db.query_collection_no_order(
             'sensor_readings',
             filters=[('field_id', '==', field_id)],
-            order_by=[('timestamp', 'DESCENDING')],
-            limit=1
+            limit=10  # Fetch 10 docs, will sort in Python
         )
 
         if not readings:
             logger.info(f'No sensor readings found for field {field_id}')
             return None
 
-        latest = readings[0]
+        # ⭐ FIX: Sort by timestamp in Python (not Firestore)
+        latest = sorted(
+            readings,
+            key=lambda x: x.get('timestamp', datetime.utcnow()),
+            reverse=True
+        )[0]
 
         # Format response
         return {
@@ -50,29 +59,23 @@ def get_latest_sensor_data(field_id: str, user_id: str) -> Optional[Dict[str, An
             'temperature': latest.get('temperature'),
             'humidity': latest.get('humidity'),
             'timestamp': latest.get('timestamp'),
-            'device_id': latest.get('device_id')
         }
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error fetching latest sensor data: {str(e)}')
         raise
 
 
-def get_sensor_history(field_id: str, user_id: str, duration: str = '7d') -> List[Dict[str, Any]]:
+def get_sensor_history(field_id: str, user_id: str,
+                       duration: str = '7d') -> List[Dict[str, Any]]:
     """
     Get historical sensor readings for a field
-
-    Args:
-        field_id: Field ID
-        user_id: User ID for authorization
-        duration: Duration string (e.g., '7d', '30d', '3m')
-
-    Returns:
-        List of sensor readings
+    ⭐ FIXED: Handles STRING timestamps from Firestore
     """
     try:
         # Verify field belongs to user
         field = db.get_document('fields', field_id)
+
         if not field or field.get('user_id') != user_id:
             logger.warning(f'Unauthorized access to field {field_id} by user {user_id}')
             return []
@@ -81,38 +84,88 @@ def get_sensor_history(field_id: str, user_id: str, duration: str = '7d') -> Lis
         days = _parse_duration(duration)
         start_date = datetime.utcnow() - timedelta(days=days)
 
-        # Query historical readings
-        readings = db.query_collection(
+        logger.info(f'📅 Fetching readings since: {start_date.isoformat()}')
+
+        # ⭐ FIX: Query WITHOUT timestamp filter (no order_by)
+        readings = db.query_collection_no_order(
             'sensor_readings',
-            filters=[
-                ('field_id', '==', field_id),
-                ('timestamp', '>=', start_date)
-            ],
-            order_by=[('timestamp', 'ASCENDING')],
-            limit=1000
+            filters=[('field_id', '==', field_id)],
+            limit=50  # Fetch up to 50 docs
         )
 
-        # Format response with aggregated data points
-        return [
-            {
-                'ph': r.get('ph'),
-                'nitrogen': r.get('nitrogen'),
-                'phosphorus': r.get('phosphorus'),
-                'potassium': r.get('potassium'),
-                'moisture': r.get('moisture'),
-                'temperature': r.get('temperature'),
-                'humidity': r.get('humidity'),
-                'timestamp': r.get('timestamp').isoformat() if r.get('timestamp') else None
-            }
-            for r in readings
-        ]
+        logger.info(f'📊 Retrieved {len(readings)} total documents')
 
-    except Exception as e:
-        logger.error(f'Error fetching sensor history: {str(e)}')
-        raise
+        # ⭐ CRITICAL FIX: Handle STRING timestamps from Firestore
+        filtered_readings = []
+        for reading in readings:
+            timestamp_str = reading.get('timestamp')
+
+            try:
+                # ⭐ CONVERT STRING to datetime
+                if isinstance(timestamp_str, str):
+                    # Parse ISO format string
+                    timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+                elif isinstance(timestamp_str, datetime):
+                    timestamp = timestamp_str
+                else:
+                    logger.warning(f'Unknown timestamp format: {type(timestamp_str)}')
+                    continue
+
+                # ⭐ NOW check if within date range
+                if timestamp >= start_date:
+                    filtered_readings.append(reading)
+                    logger.debug(f'✅ Included: {reading.get("id")} - {timestamp.isoformat()}')
+                else:
+                    logger.debug(f'⏭️ Skipped (too old): {reading.get("id")} - {timestamp.isoformat()}')
+
+            except Exception as parse_err:
+                logger.warning(f'⚠️ Failed to parse timestamp: {timestamp_str} - {str(parse_err)}')
+                continue
+
+        logger.info(f'📊 Found {len(filtered_readings)} readings after date filtering')
+
+        # ⭐ FIX: Sort by timestamp in Python
+        sorted_readings = sorted(
+            filtered_readings,
+            key=lambda x: x.get('timestamp', ''),
+            reverse=True
+        )
+
+        # ⭐ CRITICAL FIX: Format each document properly
+        results = []
+        for doc in sorted_readings:
+            try:
+                formatted_doc = {
+                    'id': doc.get('id', ''),
+                    'field_id': doc.get('field_id', field_id),
+                    'timestamp': doc.get('timestamp', ''),
+                    'ph': float(doc.get('ph', 0)),
+                    'nitrogen': float(doc.get('nitrogen', 0)),
+                    'phosphorus': float(doc.get('phosphorus', 0)),
+                    'potassium': float(doc.get('potassium', 0)),
+                    'moisture': float(doc.get('moisture', 0)),
+                    'temperature': float(doc.get('temperature', 0)),
+                    'ec': float(doc.get('ec', 0)),
+                }
+                results.append(formatted_doc)
+                logger.debug(f'✅ Formatted: {formatted_doc["id"]}')
+
+            except (ValueError, KeyError, TypeError) as e:
+                logger.warning(f'⚠️ Skipping malformed doc: {str(e)}')
+                continue
+
+        logger.info(f'✅ Returning {len(results)} formatted readings')
+        return results
+
+    except Exception as e:  # pylint: disable=broad-except
+        logger.error(f'❌ Error fetching sensor history: {str(e)}')
+        return []
 
 
-def store_sensor_reading(field_id: str, sensor_type: str, data: Dict[str, Any]) -> str:
+
+
+def store_sensor_reading(field_id: str, sensor_type: str,
+                         data: Dict[str, Any]) -> str:
     """
     Store a new sensor reading from IoT device
 
@@ -125,6 +178,7 @@ def store_sensor_reading(field_id: str, sensor_type: str, data: Dict[str, Any]) 
         Reading ID
     """
     try:
+        _ = sensor_type  # reserved for contextual processing
         reading_data = {
             'field_id': field_id,
             'device_id': data.get('device_id'),
@@ -148,7 +202,7 @@ def store_sensor_reading(field_id: str, sensor_type: str, data: Dict[str, Any]) 
 
         return reading_id
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error storing sensor reading: {str(e)}')
         raise
 
@@ -159,18 +213,17 @@ def _parse_duration(duration: str) -> int:
 
     if duration.endswith('d'):
         return int(duration[:-1])
-    elif duration.endswith('w'):
+    if duration.endswith('w'):
         return int(duration[:-1]) * 7
-    elif duration.endswith('m'):
+    if duration.endswith('m'):
         return int(duration[:-1]) * 30
-    else:
-        return 7  # Default 7 days
+    return 7  # Default 7 days
 
 
-def _check_sensor_alerts(field_id: str, reading: Dict[str, Any]):
+def _check_sensor_alerts(field_id: str, reading: Dict[str, Any]) -> None:
     """Check sensor readings for critical conditions"""
     try:
-        from app.config import Config
+        from app.core.config import Config
 
         alerts = []
 
@@ -209,7 +262,9 @@ def _check_sensor_alerts(field_id: str, reading: Dict[str, Any]):
                     'timestamp': datetime.utcnow(),
                     'acknowledged': False
                 })
-                logger.warning(f'Alert created for field {field_id}: {alert["message"]}')
+                logger.warning(
+                    f'Alert created for field {field_id}: {
+                        alert["message"]}')
 
-    except Exception as e:
+    except Exception as e:  # pylint: disable=broad-except
         logger.error(f'Error checking sensor alerts: {str(e)}')

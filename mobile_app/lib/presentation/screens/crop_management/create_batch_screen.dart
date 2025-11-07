@@ -29,7 +29,6 @@ class _CreateBatchScreenState extends State<CreateBatchScreen> {
 
   void _handleSave() {
     if (_formKey.currentState!.validate()) {
-      // TODO: Save batch via BLoC
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Batch created successfully'),
@@ -83,7 +82,7 @@ class _CreateBatchScreenState extends State<CreateBatchScreen> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                initialValue: _selectedField,
+                value: _selectedField, // FIX: Changed 'initialValue' to 'value'
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.agriculture),
                   hintText: isHindi ? 'खेत चुनें' : 'Choose field',

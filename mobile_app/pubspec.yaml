@@ -62,7 +62,7 @@ dependencies:
 
   # Charts & Visualization
   fl_chart: ^0.68.0
-  syncfusion_flutter_charts: ^31.2.0
+  syncfusion_flutter_charts: 31.1.19
 
   # Local Notifications
   flutter_local_notifications: ^17.0.0

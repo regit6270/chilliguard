@@ -144,7 +144,7 @@ class _AddFieldScreenState extends State<AddFieldScreen> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                initialValue: _selectedCrop,
+                value: _selectedCrop, // FIX: Changed 'initialValue' to 'value'
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.agriculture),
                   border: OutlineInputBorder(
@@ -184,7 +184,7 @@ class _AddFieldScreenState extends State<AddFieldScreen> {
               ),
               const SizedBox(height: 10),
               DropdownButtonFormField<String>(
-                initialValue: _selectedSoilType,
+                value: _selectedSoilType, // FIX: Changed 'initialValue' to 'value'
                 decoration: InputDecoration(
                   prefixIcon: const Icon(Icons.terrain),
                   border: OutlineInputBorder(

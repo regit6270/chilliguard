@@ -7,7 +7,7 @@ class AppConstants {
   // FOR DEVELOPMENT ONLY
   //static const String baseUrl = 'http://10.0.2.2:5000'; // Android Emulator
   static const String baseUrl =
-      'http://10.149.197.250:5000'; // Physical Device (use your PC's IP)
+      'http://192.168.0.103:5000'; // Physical Device (use your PC's IP)
   // static const String baseUrl = 'http://localhost:5000'; // iOS Simulator
 
   static const String apiVersion = 'v1';

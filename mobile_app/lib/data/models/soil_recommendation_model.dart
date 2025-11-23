@@ -94,12 +94,12 @@ class SoilRecommendationModel {
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      deficit: (json['deficit'] as num?)?.toDouble(),
-      deficitPercentage: (json['deficit_percentage'] as num?)?.toDouble(),
-      excess: (json['excess'] as num?)?.toDouble(),
-      excessPercentage: (json['excess_percentage'] as num?)?.toDouble(),
-      deviation: (json['deviation'] as num?)?.toDouble(),
-      severityPercentage: (json['severity_percentage'] as num?)?.toDouble(),
+      deficit: _parseDouble(json['deficit']),
+      deficitPercentage: _parseDouble(json['deficit_percentage']),
+      excess: _parseDouble(json['excess']),
+      excessPercentage: _parseDouble(json['excess_percentage']),
+      deviation: _parseDouble(json['deviation']),
+      severityPercentage: _parseDouble(json['severity_percentage']),
       criticalWarning: json['critical_warning'] as String?,
       riskFactors: (json['risk_factors'] as List<dynamic>?)
           ?.map((e) => e.toString())
@@ -186,6 +186,17 @@ class SoilRecommendationModel {
       riskFactors: riskFactors,
       preventionMeasures: preventionMeasures,
     );
+  }
+
+  /// Helper method to safely parse double values from JSON
+  /// Handles both numeric and string values
+  static double? _parseDouble(dynamic value) {
+    if (value == null) return null;
+    if (value is num) return value.toDouble();
+    if (value is String) {
+      return double.tryParse(value);
+    }
+    return null;
   }
 
   factory SoilRecommendationModel.fromEntity(SoilRecommendation entity) {

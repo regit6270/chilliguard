@@ -26,6 +26,17 @@ class SensorReadingModel {
   });
 
   factory SensorReadingModel.fromJson(Map<String, dynamic> json) {
+    // Parse humidity - handle null values from backend
+    double humidityValue = 0.0;
+    final humidityRaw = json['humidity'];
+    if (humidityRaw != null) {
+      if (humidityRaw is num) {
+        humidityValue = humidityRaw.toDouble();
+      } else if (humidityRaw is String) {
+        humidityValue = double.tryParse(humidityRaw) ?? 0.0;
+      }
+    }
+
     return SensorReadingModel(
       fieldId: json['field_id'] as String? ?? 'unknown',
       ph: (json['ph'] as num?)?.toDouble() ?? 0.0,
@@ -34,7 +45,7 @@ class SensorReadingModel {
       potassium: (json['potassium'] as num?)?.toDouble() ?? 0.0,
       moisture: (json['moisture'] as num?)?.toDouble() ?? 0.0,
       temperature: (json['temperature'] as num?)?.toDouble() ?? 0.0,
-      humidity: (json['humidity'] as num?)?.toDouble() ?? 0.0,
+      humidity: humidityValue,
       timestamp: _dateTimeFromJson(json['timestamp']),
     );
   }

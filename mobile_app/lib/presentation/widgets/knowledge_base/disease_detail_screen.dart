@@ -12,7 +12,7 @@ class DiseaseDetailScreen extends StatelessWidget {
 
     // placeholder content
     final name = isHindi ? 'पत्ती धब्बा' : 'Leaf Spot';
-    final scientific = 'Cercospora capsici';
+    const scientific = 'Cercospora capsici';
     final symptoms = isHindi
         ? 'पत्तियों पर गोलाकार भूरे धब्बे, पत्तियाँ झड़ना'
         : 'Circular brown spots on leaves, leaf drop';

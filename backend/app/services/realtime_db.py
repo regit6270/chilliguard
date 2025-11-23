@@ -97,9 +97,19 @@ class RealtimeDBService:
         timestamp_dt = datetime.fromtimestamp(timestamp_ms / 1000.0)
         iso_timestamp = timestamp_dt.isoformat()
 
+        # Parse humidity safely - handle None/null values
+        humidity_raw = rtdb_data.get('humidity')
+        if humidity_raw is None or humidity_raw == '':
+            humidity_value = 0.0
+        else:
+            try:
+                humidity_value = float(humidity_raw)
+            except (ValueError, TypeError):
+                humidity_value = 0.0
+
+        # Return ONLY the fields that the mobile app expects (no device_id, ec, or status)
         return {
             'field_id': app_field_id,  # Use your app's field_id
-            'device_id': rtdb_data.get('field_id', 'unknown'),  # RTDB's field_id becomes device_id
             'timestamp': iso_timestamp,
             'ph': float(rtdb_data.get('ph', 0)),
             'nitrogen': int(rtdb_data.get('nitrogen', 0)),
@@ -107,11 +117,7 @@ class RealtimeDBService:
             'potassium': int(rtdb_data.get('potassium', 0)),
             'moisture': float(rtdb_data.get('moisture', 0)),
             'temperature': float(rtdb_data.get('temperature', 0)),
-            'humidity': float(rtdb_data.get('humidity', 0)),
-            'ec': 0.0,  # Not available in RTDB, use default
-
-            # Add status indicators based on values
-            'status': self._calculate_status(rtdb_data)
+            'humidity': humidity_value,
         }
 
     def _calculate_status(self, data):

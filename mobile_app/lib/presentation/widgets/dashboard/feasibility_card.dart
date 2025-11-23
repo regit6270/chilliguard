@@ -25,7 +25,7 @@ class FeasibilityCard extends StatelessWidget {
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text('Feasibility Score', style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
+            const Text('Feasibility Score', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w600)),
             Icon(config['icon'] as IconData, color: Colors.white, size: 28),
           ]),
           const SizedBox(height: 14),

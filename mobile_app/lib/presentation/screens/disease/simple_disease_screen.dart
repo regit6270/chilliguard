@@ -102,8 +102,9 @@ class _SimpleDiseaseDetectionScreenState
       }
     } on DioException catch (e) {
       String msg = 'Connection error';
-      if (e.type == DioExceptionType.connectionTimeout) msg = 'Connection timeout';
-      else if (e.response != null && e.response?.data != null) {
+      if (e.type == DioExceptionType.connectionTimeout) {
+        msg = 'Connection timeout';
+      } else if (e.response != null && e.response?.data != null) {
         final d = e.response?.data;
         if (d is Map && d['error'] != null) msg = d['error'].toString();
       }
@@ -202,7 +203,7 @@ class _SimpleDiseaseDetectionScreenState
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final imageHeight = 300.0;
+    const imageHeight = 300.0;
 
     return Scaffold(
       appBar: AppBar(
@@ -232,9 +233,9 @@ class _SimpleDiseaseDetectionScreenState
                     : Container(
                         color: Colors.grey.shade100,
                         alignment: Alignment.center,
-                        child: Column(
+                        child: const Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
+                          children: [
                             Icon(Icons.image_outlined, size: 56, color: Colors.grey),
                             SizedBox(height: 8),
                             Text('No image selected'),

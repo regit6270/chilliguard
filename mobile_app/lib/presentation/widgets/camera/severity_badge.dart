@@ -23,7 +23,7 @@ class SeverityBadge extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             config['label'] as String,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.black87, // darker for readability
               fontSize: 12,
               fontWeight: FontWeight.w700,

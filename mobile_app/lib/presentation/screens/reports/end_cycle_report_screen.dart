@@ -56,7 +56,7 @@ class EndCycleReportScreen extends StatelessWidget {
           final isWide = constraints.maxWidth > 600;
           return SingleChildScrollView(
             padding:
-                EdgeInsets.fromLTRB(16, 12, 16, bottomFabPadding), // reserve space for FAB
+                const EdgeInsets.fromLTRB(16, 12, 16, bottomFabPadding), // reserve space for FAB
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -375,7 +375,7 @@ class EndCycleReportScreen extends StatelessWidget {
           Icon(icon, size: 12, color: Colors.grey[700]),
           const SizedBox(width: 6),
           ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: 200),
+            constraints: const BoxConstraints(maxWidth: 200),
             child: Text(
               label,
               style: TextStyle(fontSize: 12, color: Colors.grey[700]),

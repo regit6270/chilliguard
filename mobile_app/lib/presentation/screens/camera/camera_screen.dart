@@ -9,7 +9,6 @@ import 'package:image_picker/image_picker.dart';
 
 import '../../blocs/disease_detection/disease_detection_bloc.dart';
 import '../../widgets/camera/confidence_indicator.dart';
-import '../../widgets/camera/detection_result_card.dart';
 import '../../widgets/camera/severity_badge.dart';
 import '../../widgets/common/bottom_navigation_bar.dart';
 import '../../widgets/common/loading_overlay.dart';

@@ -24,7 +24,7 @@ class ConfidenceIndicator extends StatelessWidget {
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Stack(alignment: Alignment.center, children: [
-          SizedBox(width: 36, height: 36, child: CircularProgressIndicator(value: confidence.clamp(0.0, 1.0), strokeWidth: 3, valueColor: AlwaysStoppedAnimation(Colors.white))),
+          SizedBox(width: 36, height: 36, child: CircularProgressIndicator(value: confidence.clamp(0.0, 1.0), strokeWidth: 3, valueColor: const AlwaysStoppedAnimation(Colors.white))),
           Text('$percentage%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
         ]),
         const SizedBox(width: 8),

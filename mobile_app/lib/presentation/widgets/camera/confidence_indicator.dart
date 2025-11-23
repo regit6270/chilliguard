@@ -1,3 +1,4 @@
+// lib/widgets/camera/confidence_indicator.dart
 import 'package:flutter/material.dart';
 
 class ConfidenceIndicator extends StatelessWidget {
@@ -12,58 +13,33 @@ class ConfidenceIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final percentage = (confidence * 100).toStringAsFixed(1);
+    final percentage = (confidence * 100).toStringAsFixed(0);
     final color = _getConfidenceColor();
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.9),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        color: color.withOpacity(0.95),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [BoxShadow(color: color.withOpacity(0.15), blurRadius: 8, offset: const Offset(0, 3))],
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            _getConfidenceIcon(),
-            color: Colors.white,
-            size: 18,
-          ),
-          const SizedBox(width: 6),
-          Text(
-            '$percentage%',
-            style: const TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            modelType == 'cloud' ? '☁' : '📱',
-            style: const TextStyle(fontSize: 12),
-          ),
-        ],
-      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Stack(alignment: Alignment.center, children: [
+          SizedBox(width: 36, height: 36, child: CircularProgressIndicator(value: confidence.clamp(0.0, 1.0), strokeWidth: 3, valueColor: AlwaysStoppedAnimation(Colors.white))),
+          Text('$percentage%', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+        ]),
+        const SizedBox(width: 8),
+        Column(crossAxisAlignment: CrossAxisAlignment.start, mainAxisSize: MainAxisSize.min, children: [
+          Text(confidence >= 0.8 ? 'High confidence' : (confidence >= 0.6 ? 'Medium confidence' : 'Low confidence'),
+              style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w600)),
+          Text(modelType.toLowerCase() == 'cloud' ? 'Cloud model' : 'On-device', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+        ]),
+      ]),
     );
   }
 
   Color _getConfidenceColor() {
-    if (confidence >= 0.8) return Colors.green;
-    if (confidence >= 0.6) return Colors.orange;
-    return Colors.red;
-  }
-
-  IconData _getConfidenceIcon() {
-    if (confidence >= 0.8) return Icons.verified;
-    if (confidence >= 0.6) return Icons.info;
-    return Icons.warning;
+    if (confidence >= 0.8) return Colors.green.shade700;
+    if (confidence >= 0.6) return Colors.orange.shade700;
+    return Colors.red.shade700;
   }
 }

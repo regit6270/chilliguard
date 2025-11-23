@@ -19,6 +19,8 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
+  static const _defaultFieldId = 'field_123';
+
   @override
   void initState() {
     super.initState();
@@ -26,9 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _loadDashboard() {
-    // TODO: Get selected field ID from LocalStorageService
-    const fieldId = 'field_123';
-    context.read<DashboardBloc>().add(const LoadDashboardData(fieldId));
+    context.read<DashboardBloc>().add(const LoadDashboardData(_defaultFieldId));
   }
 
   @override
@@ -49,25 +49,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             if (state is DashboardLoaded) {
               return RefreshIndicator(
                 onRefresh: () async {
-                  context.read<DashboardBloc>().add(
-                        const RefreshDashboardData('field_123'),
-                      );
-                  await Future.delayed(const Duration(milliseconds: 500));
+                  context.read<DashboardBloc>().add(const RefreshDashboardData(_defaultFieldId));
+                  await Future.delayed(const Duration(milliseconds: 250));
                 },
                 child: CustomScrollView(
                   slivers: [
                     _buildAppBar(context, state),
                     SliverPadding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
                       sliver: SliverList(
                         delegate: SliverChildListDelegate([
-                          // Critical Alerts Section (NEW - More prominent)
-                          if (state.recentAlerts.isNotEmpty)
-                            _buildAlertsSection(state),
-
-                          const SizedBox(height: 16),
-
-                          // Feasibility Score Card
+                          if (state.recentAlerts.isNotEmpty) _buildAlertsSection(state),
+                          const SizedBox(height: 14),
                           _buildSectionHeader(context, 'Crop Readiness'),
                           const SizedBox(height: 12),
                           FeasibilityCard(
@@ -75,57 +68,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             status: state.feasibilityStatus,
                             onTap: () => context.push('/soil-health'),
                           ),
-
-                          const SizedBox(height: 24),
-
-                          // Soil Health Snapshot
+                          const SizedBox(height: 22),
                           _buildSectionHeader(context, 'Soil Health Snapshot'),
                           const SizedBox(height: 12),
+                          if (state.latestSensorData != null) _buildSensorGrid(state.latestSensorData!),
+                          if (state.latestSensorData != null) const SizedBox(height: 8),
                           if (state.latestSensorData != null)
-                            _buildSensorGrid(state.latestSensorData!),
-
-                          // Last Updated Timestamp
-                          if (state.latestSensorData != null) ...[
-                            const SizedBox(height: 8),
                             Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 4),
                               child: Text(
                                 'Last updated: ${_formatTimestamp(state.latestSensorData!.timestamp)}',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(
-                                      color: Colors.grey[600],
-                                    ),
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                               ),
                             ),
-                          ],
-
-                          const SizedBox(height: 24),
-
-                          // Active Batch Card
+                          const SizedBox(height: 26),
                           _buildSectionHeader(context, 'Active Crop'),
                           const SizedBox(height: 12),
                           if (state.activeBatch != null)
                             ActiveBatchCard(
                               batch: state.activeBatch!,
-                              onTap: () => context.push(
-                                '/crop-management/batch/${state.activeBatch!.batchId}',
-                              ),
+                              onTap: () => context.push('/crop-management/batch/${state.activeBatch!.batchId}'),
                             )
                           else
                             _buildNoBatchCard(),
-
-                          const SizedBox(height: 24),
-
-                          // Quick Actions (OLD - Better with 4 actions)
+                          const SizedBox(height: 22),
                           _buildSectionHeader(context, 'Quick Actions'),
                           const SizedBox(height: 12),
                           _buildQuickActionsScroll(context),
-
-                          const SizedBox(
-                              height: 90), // Bottom nav + FAB padding
+                          const SizedBox(height: 130),
                         ]),
                       ),
                     ),
@@ -138,154 +108,149 @@ class _DashboardScreenState extends State<DashboardScreen> {
           },
         ),
       ),
-      // OLD: Bottom Navigation Bar (PRD Required)
-      bottomNavigationBar:
-          const ChilliGuardBottomNavigationBar(currentIndex: 0),
-      // Floating Action Button for Disease Detection
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => context.push('/disease-detection'),
-        tooltip: 'Detect Disease',
-        child: const Icon(Icons.camera_alt),
-      ),
+      bottomNavigationBar: const ChilliGuardBottomNavigationBar(currentIndex: 0),
+      floatingActionButton: _buildCenteredFab(context),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 
-  // NEW: Enhanced Sliver App Bar (Zepto-style)
-  Widget _buildAppBar(BuildContext context, DashboardLoaded state) {
-    return SliverAppBar(
-      floating: true,
-      snap: true,
-      elevation: 0,
-      backgroundColor: Theme.of(context).colorScheme.primary,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'ChilliGuard',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          Text(
-            'Field Alpha', // TODO: Dynamic field name
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.white70,
-                ),
-          ),
-        ],
+  Widget _buildCenteredFab(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () => context.push('/disease-detection'),
+      backgroundColor: const Color(0xFF2F8E4F),
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      child: Container(
+        width: 52,
+        height: 52,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+        child: const Icon(Icons.camera_alt, size: 26, color: Colors.white),
       ),
-      actions: [
-        // Field Selector
-        IconButton(
-          icon: const Icon(Icons.location_on, color: Colors.white),
-          tooltip: 'Change Field',
-          onPressed: () {
-            // TODO: Show field selector dialog
-          },
-        ),
-        // Notifications with Badge
-        Stack(
-          children: [
-            IconButton(
-              icon:
-                  const Icon(Icons.notifications_outlined, color: Colors.white),
-              tooltip: 'Notifications',
-              onPressed: () => context.push('/alerts'),
-            ),
-            if (state.recentAlerts.isNotEmpty)
-              Positioned(
-                right: 8,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: Text(
-                    '${state.recentAlerts.length}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        // More Options Menu
-        PopupMenuButton<String>(
-          icon: const Icon(Icons.more_vert, color: Colors.white),
-          onSelected: (value) {
-            if (value == 'field_management') {
-              context.push('/field-management');
-            } else if (value == 'settings') {
-              context.push('/settings');
-            }
-          },
-          itemBuilder: (BuildContext context) => [
-            const PopupMenuItem(
-              value: 'field_management',
-              child: Text('Manage Fields'),
-            ),
-            const PopupMenuItem(
-              value: 'settings',
-              child: Text('Settings'),
-            ),
-          ],
-        ),
-      ],
     );
   }
 
-  // NEW: Enhanced Alert Section
+  /// Compact, responsive appbar that avoids overflow when collapsed.
+  SliverAppBar _buildAppBar(BuildContext context, DashboardLoaded state) {
+    const Color deepGreen = Color(0xFF1F7A45);
+    const Color lightGreen = Color(0xFF61B57C);
+
+    return SliverAppBar(
+      pinned: true,
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      // reduced expandedHeight
+      expandedHeight: 96,
+      // provide explicit collapsedHeight so system knows toolbar size
+      collapsedHeight: 64,
+      automaticallyImplyLeading: false,
+      flexibleSpace: LayoutBuilder(builder: (ctx, constraints) {
+        // constraints.maxHeight varies from collapsedHeight .. expandedHeight
+        final bool isCollapsed = constraints.maxHeight <= 72; // threshold to switch to compact layout
+        final titleStyle = isCollapsed
+            ? Theme.of(context).textTheme.titleMedium?.copyWith(color: Colors.white, fontWeight: FontWeight.w700)
+            : Theme.of(context).textTheme.headlineSmall?.copyWith(color: Colors.white, fontWeight: FontWeight.w800);
+        final subtitleStyle = Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white70);
+
+        return ClipRRect(
+          borderRadius: const BorderRadius.vertical(bottom: Radius.circular(18)),
+          child: Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [deepGreen, lightGreen],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 3))],
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                // reduce vertical padding in collapsed mode
+                padding: EdgeInsets.symmetric(horizontal: 18, vertical: isCollapsed ? 8 : 12),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // title section
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          // Title - font size adapts by style above
+                          Text('ChilliGuard', style: titleStyle),
+                          // show subtitle only when not collapsed
+                          if (!isCollapsed) const SizedBox(height: 4),
+                          if (!isCollapsed) Text('Field Alpha', style: subtitleStyle),
+                        ],
+                      ),
+                    ),
+
+                    // Notifications
+                    IconButton(
+                      onPressed: () => context.push('/alerts'),
+                      icon: const Icon(Icons.notifications_none, color: Colors.white),
+                      tooltip: 'Alerts',
+                      splashRadius: 20,
+                    ),
+
+                    // Profile avatar
+                    GestureDetector(
+                      onTap: () => context.push('/profile'),
+                      child: Container(
+                        margin: const EdgeInsets.only(left: 6),
+                        width: isCollapsed ? 36 : 38,
+                        height: isCollapsed ? 36 : 38,
+                        decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), shape: BoxShape.circle),
+                        child: const Icon(Icons.person, color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      }),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(bottom: Radius.circular(18))),
+    );
+  }
+
   Widget _buildAlertsSection(DashboardLoaded state) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.red[50],
+        color: Colors.red.withOpacity(0.06),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.red[200]!),
+        border: Border.all(color: Colors.red.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.red[700]),
-              const SizedBox(width: 8),
-              Text(
-                'Critical Alerts',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.red[900],
-                ),
-              ),
+              Icon(Icons.warning_amber_rounded, color: Colors.red.shade700),
+              const SizedBox(width: 10),
+              Text('Critical Alerts', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
               const Spacer(),
-              TextButton(
-                onPressed: () => context.push('/alerts'),
-                child:
-                    Text('View All', style: TextStyle(color: Colors.red[700])),
-              ),
+              TextButton(onPressed: () => context.push('/alerts'), child: const Text('View All')),
             ],
           ),
-          const SizedBox(height: 12),
-          ...state.recentAlerts.take(3).map((alert) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: AlertListItem(
-                  alert: alert,
-                  onTap: () => context.push('/alerts'),
-                ),
-              )),
+          const SizedBox(height: 10),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 160),
+            child: ListView.separated(
+              shrinkWrap: true,
+              physics: const BouncingScrollPhysics(),
+              itemBuilder: (context, index) {
+                final alert = state.recentAlerts[index];
+                return AlertListItem(alert: alert, onTap: () => context.push('/alerts'));
+              },
+              separatorBuilder: (_, __) => const Divider(height: 0),
+              itemCount: state.recentAlerts.length.clamp(0, 5),
+            ),
+          ),
         ],
       ),
     );
@@ -294,14 +259,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildSectionHeader(BuildContext context, String title) {
     return Text(
       title,
-      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: Colors.black87,
-          ),
+      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, color: Colors.black87),
     );
   }
 
-  // NEW: 2x3 Comprehensive Sensor Grid
   Widget _buildSensorGrid(sensorReading) {
     return GridView.count(
       shrinkWrap: true,
@@ -309,7 +270,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       crossAxisCount: 2,
       mainAxisSpacing: 12,
       crossAxisSpacing: 12,
-      childAspectRatio: 1.4,
+      childAspectRatio: 1.35,
       children: [
         SensorCard(
           title: 'pH Level',
@@ -359,157 +320,85 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   SensorStatus _getSensorStatus(double value, double min, double max) {
     if (value >= min && value <= max) return SensorStatus.optimal;
-    if (value >= min * 0.85 && value <= max * 1.15) {
-      return SensorStatus.acceptable;
-    }
+    if (value >= min * 0.85 && value <= max * 1.15) return SensorStatus.acceptable;
     return SensorStatus.critical;
   }
 
   Widget _buildNoBatchCard() {
     return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), boxShadow: [
+        BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 10, offset: const Offset(0, 6))
+      ]),
       child: Column(
         children: [
-          Icon(Icons.eco, size: 48, color: Colors.grey[400]),
+          Icon(Icons.eco, size: 56, color: Colors.green.shade50),
           const SizedBox(height: 16),
-          Text(
-            'No Active Crop',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey[700],
-            ),
-          ),
+          Text('No Active Crop', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
           const SizedBox(height: 8),
-          Text(
-            'Start tracking a new crop batch',
-            style: TextStyle(color: Colors.grey[600]),
-          ),
+          Text('Start tracking a new crop batch', style: Theme.of(context).textTheme.bodyMedium),
           const SizedBox(height: 16),
           ElevatedButton.icon(
             onPressed: () => context.push('/crop-management/new'),
             icon: const Icon(Icons.add),
             label: const Text('Create New Batch'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
+            style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12)),
           ),
         ],
       ),
     );
   }
 
-  // OLD: Horizontal Scroll Quick Actions (Better UX for farmers)
   Widget _buildQuickActionsScroll(BuildContext context) {
     final actions = [
-      {
-        'icon': Icons.camera_alt,
-        'label': 'Detect Disease',
-        'route': '/disease-detection',
-        'color': Colors.green,
-      },
-      {
-        'icon': Icons.analytics,
-        'label': 'View Reports',
-        'route': '/reports',
-        'color': Colors.amber,
-      },
-      {
-        'icon': Icons.book,
-        'label': 'Learn',
-        'route': '/knowledge-base',
-        'color': Colors.blue,
-      },
-      {
-        'icon': Icons.history,
-        'label': 'History',
-        'route': '/crop-batches',
-        'color': Colors.purple,
-      },
+      {'icon': Icons.camera_alt, 'label': 'Detect Disease', 'route': '/disease-detection'},
+      {'icon': Icons.analytics, 'label': 'View Reports', 'route': '/reports'},
+      {'icon': Icons.book, 'label': 'Knowledge', 'route': '/knowledge-base'},
+      {'icon': Icons.history, 'label': 'History', 'route': '/crop-batches'},
     ];
 
     return SizedBox(
       height: 100,
-      child: ListView.builder(
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        itemCount: actions.length,
+        physics: const BouncingScrollPhysics(),
         itemBuilder: (context, index) {
           final action = actions[index];
           return Container(
-            width: 90,
-            margin: const EdgeInsets.only(right: 12),
+            width: 110,
+            margin: EdgeInsets.only(right: index == actions.length - 1 ? 0 : 12),
             child: InkWell(
               onTap: () => context.push(action['route'] as String),
               borderRadius: BorderRadius.circular(12),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: (action['color'] as Color).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      action['icon'] as IconData,
-                      size: 28,
-                      color: action['color'] as Color,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    action['label'] as String,
-                    style: Theme.of(context).textTheme.bodySmall,
-                    textAlign: TextAlign.center,
-                  ),
-                ],
-              ),
+              child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(color: Colors.green.withOpacity(0.08), borderRadius: BorderRadius.circular(12)),
+                  child: Icon(action['icon'] as IconData, size: 26, color: Colors.green.shade700),
+                ),
+                const SizedBox(height: 8),
+                Text(action['label'] as String, style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
+              ]),
             ),
           );
         },
+        separatorBuilder: (_, __) => const SizedBox(width: 0),
+        itemCount: actions.length,
       ),
     );
   }
 
   Widget _buildErrorView(String message) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-          const SizedBox(height: 16),
-          const Text(
-            'Error Loading Dashboard',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              message,
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey[600]),
-            ),
-          ),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: _loadDashboard,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Retry'),
-          ),
-        ],
-      ),
+      child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+        Icon(Icons.error_outline, size: 64, color: Colors.red.shade400),
+        const SizedBox(height: 16),
+        Text('Error Loading Dashboard', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: 8),
+        Padding(padding: const EdgeInsets.symmetric(horizontal: 32), child: Text(message, textAlign: TextAlign.center)),
+        const SizedBox(height: 24),
+        ElevatedButton.icon(onPressed: _loadDashboard, icon: const Icon(Icons.refresh), label: const Text('Retry')),
+      ]),
     );
   }
 

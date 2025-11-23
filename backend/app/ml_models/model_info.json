@@ -1,25 +1,43 @@
 {
   "class_names": [
-    "Bacterial Spot",
-    "Cercospora Leaf Spot",
-    "Curl Virus",
-    "Healthy Leaf",
-    "Nutrition Deficiency",
-    "White spot"
+    "Pepper__bell___Bacterial_spot",
+    "Pepper__bell___healthy",
+    "Potato___Early_blight",
+    "Potato___Late_blight",
+    "Potato___healthy",
+    "Tomato_Bacterial_spot",
+    "Tomato_Early_blight",
+    "Tomato_Late_blight",
+    "Tomato_Leaf_Mold",
+    "Tomato_Septoria_leaf_spot",
+    "Tomato_Spider_mites_Two_spotted_spider_mite",
+    "Tomato__Target_Spot",
+    "Tomato__Tomato_YellowLeaf__Curl_Virus",
+    "Tomato__Tomato_mosaic_virus",
+    "Tomato_healthy"
   ],
   "class_indices": {
-    "Bacterial Spot": 0,
-    "Cercospora Leaf Spot": 1,
-    "Curl Virus": 2,
-    "Healthy Leaf": 3,
-    "Nutrition Deficiency": 4,
-    "White spot": 5
+    "Pepper__bell___Bacterial_spot": 0,
+    "Pepper__bell___healthy": 1,
+    "Potato___Early_blight": 2,
+    "Potato___Late_blight": 3,
+    "Potato___healthy": 4,
+    "Tomato_Bacterial_spot": 5,
+    "Tomato_Early_blight": 6,
+    "Tomato_Late_blight": 7,
+    "Tomato_Leaf_Mold": 8,
+    "Tomato_Septoria_leaf_spot": 9,
+    "Tomato_Spider_mites_Two_spotted_spider_mite": 10,
+    "Tomato__Target_Spot": 11,
+    "Tomato__Tomato_YellowLeaf__Curl_Virus": 12,
+    "Tomato__Tomato_mosaic_virus": 13,
+    "Tomato_healthy": 14
   },
   "input_size": [
     224,
     224
   ],
-  "test_accuracy": 0.9623655676841736,
-  "test_precision": 0.9674796462059021,
-  "test_recall": 0.9596773982048035
+  "test_accuracy": 0.9186046719551086,
+  "test_precision": 0.9345163702964783,
+  "test_recall": 0.9057655334472656
 }

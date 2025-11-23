@@ -1,502 +1,442 @@
-import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:flutter/material.dart';
+// import 'package:go_router/go_router.dart';
 
-class DiseaseResultScreen extends StatelessWidget {
-  final String detectionId;
+// class DiseaseResultScreen extends StatelessWidget {
+//   final String detectionId;
 
-  const DiseaseResultScreen({
-    super.key,
-    required this.detectionId,
-  });
+//   const DiseaseResultScreen({
+//     super.key,
+//     required this.detectionId,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    final isHindi = Localizations.localeOf(context).languageCode == 'hi';
+//   @override
+//   Widget build(BuildContext context) {
+//     final isHindi = Localizations.localeOf(context).languageCode == 'hi';
 
-    // Mock data - replace with BLoC data
-    final result = {
-      'disease': isHindi ? 'पत्ती धब्बा रोग' : 'Leaf Spot Disease',
-      'scientificName': 'Cercospora capsici',
-      'confidence': 92.5,
-      'severity': 'medium',
-      'imageUrl': null, // Captured image
-      'timestamp': '2024-03-15 14:30',
-    };
+//     // Mock data - use BLoC result in production
+//     final result = {
+//       'disease': isHindi ? 'पत्ती धब्बा रोग' : 'Leaf Spot Disease',
+//       'scientificName': 'Cercospora capsici',
+//       'confidence': 92.5,
+//       'severity': 'medium',
+//       'imageUrl': null,
+//       'timestamp': '2024-03-15 14:30',
+//     };
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isHindi ? 'निदान परिणाम' : 'Detection Result'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              // TODO: Share result
-            },
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image Preview
-            _buildImagePreview(context, result),
+//     return Scaffold(
+//       backgroundColor: Colors.grey[50],
+//       appBar: AppBar(
+//         elevation: 0,
+//         title: Text(
+//           isHindi ? 'निदान परिणाम' : 'Detection Result',
+//           style: const TextStyle(fontWeight: FontWeight.bold),
+//         ),
+//         actions: [
+//           IconButton(
+//             icon: const Icon(Icons.share_outlined),
+//             onPressed: () {},
+//           )
+//         ],
+//       ),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.only(bottom: 32),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.stretch,
+//           children: [
+//             _modernImagePreview(result),
+//             const SizedBox(height: 16),
+//             _modernResultCard(result, isHindi),
+//             const SizedBox(height: 18),
+//             _modernSeverityIndicator(result['severity'] as String, isHindi),
+//             const SizedBox(height: 22),
+//             _modernSectionSymptoms(isHindi),
+//             const SizedBox(height: 22),
+//             _modernSectionTreatment(isHindi),
+//             const SizedBox(height: 22),
+//             _modernSectionPrevention(isHindi),
+//             const SizedBox(height: 26),
+//             _bottomButtons(context, isHindi),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
 
-            // Result Card
-            _buildResultCard(context, result, isHindi),
+//   // ---------------------------------------------------------------------------
+//   // MODERN IMAGE PREVIEW (rounded, shadow, subtle overlay)
+//   // ---------------------------------------------------------------------------
 
-            const SizedBox(height: 16),
+//   Widget _modernImagePreview(Map<String, dynamic> result) {
+//     return Container(
+//       margin: const EdgeInsets.symmetric(horizontal: 16),
+//       height: 260,
+//       decoration: BoxDecoration(
+//         color: Colors.grey[200],
+//         borderRadius: BorderRadius.circular(20),
+//         boxShadow: [
+//           BoxShadow(
+//             color: Colors.black.withOpacity(0.08),
+//             blurRadius: 16,
+//             offset: const Offset(0, 6),
+//           ),
+//         ],
+//       ),
+//       clipBehavior: Clip.antiAlias,
+//       child: result['imageUrl'] != null
+//           ? Image.network(result['imageUrl'], fit: BoxFit.cover)
+//           : Container(
+//               color: Colors.grey[150],
+//               child: const Center(
+//                 child: Icon(Icons.image_rounded,
+//                     size: 90, color: Colors.grey),
+//               ),
+//             ),
+//     );
+//   }
 
-            // Severity Indicator
-            _buildSeverityIndicator(
-                context, result['severity'] as String, isHindi),
+//   // ---------------------------------------------------------------------------
+//   // MODERN RESULT CARD (gradient, modern layout)
+//   // ---------------------------------------------------------------------------
 
-            const SizedBox(height: 16),
+//   Widget _modernResultCard(
+//       Map<String, dynamic> result, bool isHindi) {
+//     final color = _severityColor(result['severity']);
 
-            // Symptoms Section
-            _buildSymptomsSection(context, isHindi),
+//     return Container(
+//       margin: const EdgeInsets.symmetric(horizontal: 16),
+//       padding: const EdgeInsets.all(22),
+//       decoration: BoxDecoration(
+//         borderRadius: BorderRadius.circular(20),
+//         gradient: LinearGradient(
+//           colors: [
+//             color.withOpacity(0.12),
+//             Colors.white,
+//           ],
+//           begin: Alignment.topLeft,
+//           end: Alignment.bottomRight,
+//         ),
+//         border: Border.all(color: color.withOpacity(0.4), width: 1.5),
+//         boxShadow: [
+//           BoxShadow(
+//             color: color.withOpacity(0.20),
+//             blurRadius: 14,
+//             spreadRadius: -3,
+//             offset: const Offset(0, 5),
+//           )
+//         ],
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Row(
+//             children: [
+//               Container(
+//                 padding: const EdgeInsets.all(14),
+//                 decoration: BoxDecoration(
+//                   color: color.withOpacity(0.15),
+//                   shape: BoxShape.circle,
+//                 ),
+//                 child: Icon(Icons.coronavirus_rounded,
+//                     color: color, size: 32),
+//               ),
+//               const SizedBox(width: 14),
+//               Expanded(
+//                 child: Column(
+//                   crossAxisAlignment: CrossAxisAlignment.start,
+//                   children: [
+//                     Text(
+//                       result['disease'],
+//                       style: const TextStyle(
+//                         fontSize: 22,
+//                         fontWeight: FontWeight.w800,
+//                       ),
+//                     ),
+//                     const SizedBox(height: 4),
+//                     Text(
+//                       result['scientificName'],
+//                       style: TextStyle(
+//                         fontStyle: FontStyle.italic,
+//                         color: Colors.grey[700],
+//                         fontSize: 13.5,
+//                       ),
+//                     ),
+//                   ],
+//                 ),
+//               ),
+//             ],
+//           ),
 
-            const SizedBox(height: 16),
+//           const SizedBox(height: 22),
 
-            // Treatment Section
-            _buildTreatmentSection(context, isHindi),
+//           // Confidence + Time
+//           Row(
+//             children: [
+//               Expanded(
+//                 child: _miniInfo(
+//                   icon: Icons.insights_rounded,
+//                   color: Colors.green,
+//                   label: isHindi ? 'विश्वास' : 'Confidence',
+//                   value: '${result['confidence']}%',
+//                 ),
+//               ),
+//               const SizedBox(width: 16),
+//               Expanded(
+//                 child: _miniInfo(
+//                   icon: Icons.access_time_rounded,
+//                   color: Colors.blue,
+//                   label: isHindi ? 'समय' : 'Time',
+//                   value: result['timestamp'],
+//                 ),
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
 
-            const SizedBox(height: 16),
+//   Widget _miniInfo({
+//     required IconData icon,
+//     required String label,
+//     required String value,
+//     required Color color,
+//   }) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Row(
+//           children: [
+//             Icon(icon, size: 18, color: color),
+//             const SizedBox(width: 6),
+//             Text(label,
+//                 style: TextStyle(fontSize: 12, color: Colors.grey[600])),
+//           ],
+//         ),
+//         const SizedBox(height: 3),
+//         Text(
+//           value,
+//           style: const TextStyle(
+//               fontSize: 15, fontWeight: FontWeight.bold),
+//         ),
+//       ],
+//     );
+//   }
 
-            // Prevention Section
-            _buildPreventionSection(context, isHindi),
+//   // ---------------------------------------------------------------------------
+//   // MODERN SEVERITY INDICATOR (pill card)
+//   // ---------------------------------------------------------------------------
 
-            const SizedBox(height: 16),
+//   Widget _modernSeverityIndicator(String severity, bool isHindi) {
+//     final color = _severityColor(severity);
 
-            // Action Buttons
-            _buildActionButtons(context, isHindi),
+//     String text = switch (severity.toLowerCase()) {
+//       'high' => isHindi ? 'उच्च गंभीरता' : 'High Severity',
+//       'medium' => isHindi ? 'मध्यम गंभीरता' : 'Medium Severity',
+//       'low' => isHindi ? 'कम गंभीरता' : 'Low Severity',
+//       _ => severity
+//     };
 
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
+//     return Container(
+//       margin: const EdgeInsets.symmetric(horizontal: 16),
+//       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+//       decoration: BoxDecoration(
+//         color: color.withOpacity(0.12),
+//         borderRadius: BorderRadius.circular(16),
+//         border: Border.all(color: color.withOpacity(0.4), width: 1.4),
+//       ),
+//       child: Row(
+//         children: [
+//           Icon(Icons.error_outline_rounded, color: color),
+//           const SizedBox(width: 12),
+//           Text(
+//             text,
+//             style: TextStyle(
+//               fontWeight: FontWeight.w700,
+//               fontSize: 16,
+//               color: color,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
 
-  Widget _buildImagePreview(BuildContext context, Map<String, dynamic> result) {
-    return Container(
-      width: double.infinity,
-      height: 250,
-      color: Colors.grey[200],
-      child: result['imageUrl'] != null
-          ? Image.network(result['imageUrl'] as String, fit: BoxFit.cover)
-          : const Center(
-              child: Icon(Icons.image, size: 80, color: Colors.grey),
-            ),
-    );
-  }
+//   // ---------------------------------------------------------------------------
+//   // MODERN SECTIONS
+//   // ---------------------------------------------------------------------------
 
-  Widget _buildResultCard(
-    BuildContext context,
-    Map<String, dynamic> result,
-    bool isHindi,
-  ) {
-    return Card(
-      margin: const EdgeInsets.all(16),
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-        side: BorderSide(
-          color: _getSeverityColor(result['severity'] as String),
-          width: 2,
-        ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: _getSeverityColor(result['severity'] as String)
-                        .withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.bug_report,
-                    color: _getSeverityColor(result['severity'] as String),
-                    size: 32,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        result['disease'] as String,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        result['scientificName'] as String,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontStyle: FontStyle.italic,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildInfoItem(
-                    icon: Icons.check_circle,
-                    label: isHindi ? 'विश्वास' : 'Confidence',
-                    value: '${result['confidence']}%',
-                    color: Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildInfoItem(
-                    icon: Icons.access_time,
-                    label: isHindi ? 'समय' : 'Time',
-                    value: result['timestamp'] as String,
-                    color: Colors.blue,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+//   Widget _modernSectionSymptoms(bool isHindi) {
+//     final symptoms = [
+//       isHindi ? 'पत्तियों पर गहरे धब्बे' : 'Dark lesions on leaves',
+//       isHindi ? 'धब्बे समय के साथ बढ़ते हैं' : 'Lesions expand over time',
+//       isHindi ? 'पत्तियां पीली पड़ सकती हैं' : 'Possible leaf yellowing',
+//       isHindi ? 'गंभीर होने पर पत्तियां गिरती हैं' : 'Severe leaf drop',
+//     ];
 
-  Widget _buildInfoItem({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Icon(icon, size: 16, color: color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
+//     return _modernSection(
+//       icon: Icons.visibility_rounded,
+//       color: Colors.orange,
+//       title: isHindi ? 'लक्षण' : 'Symptoms',
+//       items: symptoms,
+//     );
+//   }
 
-  Widget _buildSeverityIndicator(
-    BuildContext context,
-    String severity,
-    bool isHindi,
-  ) {
-    final color = _getSeverityColor(severity);
-    String label;
+//   Widget _modernSectionTreatment(bool isHindi) {
+//     final treatments = [
+//       isHindi
+//           ? 'तांबा आधारित कवकनाशी (2g/लीटर)'
+//           : 'Copper fungicide (2g/liter)',
+//       isHindi
+//           ? 'नीम का तेल 5ml/लीटर'
+//           : 'Neem oil 5ml/liter',
+//       isHindi
+//           ? 'सफाई और संक्रमित पत्तियां हटाएं'
+//           : 'Remove infected leaves',
+//     ];
 
-    switch (severity) {
-      case 'high':
-        label = isHindi ? 'उच्च गंभीरता' : 'High Severity';
-        break;
-      case 'medium':
-        label = isHindi ? 'मध्यम गंभीरता' : 'Medium Severity';
-        break;
-      case 'low':
-        label = isHindi ? 'कम गंभीरता' : 'Low Severity';
-        break;
-      default:
-        label = severity;
-    }
+//     return _modernSection(
+//       icon: Icons.medical_services_rounded,
+//       color: Colors.green,
+//       title: isHindi ? 'उपचार' : 'Treatment',
+//       items: treatments,
+//     );
+//   }
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.warning, color: color),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+//   Widget _modernSectionPrevention(bool isHindi) {
+//     final items = [
+//       isHindi ? 'अधिक सिंचाई से बचें' : 'Avoid overhead watering',
+//       isHindi ? 'खेत स्वच्छ रखें' : 'Maintain field hygiene',
+//       isHindi ? 'सही दूरी रखें' : 'Proper spacing',
+//     ];
 
-  Widget _buildSymptomsSection(BuildContext context, bool isHindi) {
-    final symptoms = [
-      isHindi ? 'पत्तियों पर गहरे भूरे धब्बे' : 'Dark brown spots on leaves',
-      isHindi ? 'धब्बे समय के साथ बड़े होते हैं' : 'Spots enlarge over time',
-      isHindi ? 'पत्तियां पीली पड़ सकती हैं' : 'Leaves may turn yellow',
-      isHindi ? 'गंभीर मामलों में पत्ती गिरना' : 'Leaf drop in severe cases',
-    ];
+//     return _modernSection(
+//       icon: Icons.shield_rounded,
+//       color: Colors.purple,
+//       title: isHindi ? 'रोकथाम' : 'Prevention',
+//       items: items,
+//     );
+//   }
 
-    return _buildSection(
-      context: context,
-      title: isHindi ? 'लक्षण' : 'Symptoms',
-      icon: Icons.visibility,
-      color: Colors.orange,
-      children: symptoms.map((symptom) => _buildListItem(symptom)).toList(),
-    );
-  }
+//   Widget _modernSection({
+//     required IconData icon,
+//     required Color color,
+//     required String title,
+//     required List<String> items,
+//   }) {
+//     return Container(
+//       margin: const EdgeInsets.symmetric(horizontal: 16),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Row(children: [
+//             Icon(icon, color: color),
+//             const SizedBox(width: 10),
+//             Text(title,
+//                 style: TextStyle(
+//                     fontSize: 18,
+//                     fontWeight: FontWeight.w800,
+//                     color: color)),
+//           ]),
+//           const SizedBox(height: 12),
+//           Container(
+//             padding: const EdgeInsets.all(20),
+//             decoration: BoxDecoration(
+//               color: Colors.white,
+//               borderRadius: BorderRadius.circular(18),
+//               boxShadow: [
+//                 BoxShadow(
+//                   color: Colors.black.withOpacity(0.06),
+//                   blurRadius: 12,
+//                   offset: const Offset(0, 4),
+//                 ),
+//               ],
+//             ),
+//             child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: items
+//                     .map((e) => Padding(
+//                           padding: const EdgeInsets.only(bottom: 10),
+//                           child: Row(
+//                             crossAxisAlignment: CrossAxisAlignment.start,
+//                             children: [
+//                               Container(
+//                                 width: 7,
+//                                 height: 7,
+//                                 margin: const EdgeInsets.only(top: 5),
+//                                 decoration: BoxDecoration(
+//                                     color: Colors.grey[700],
+//                                     shape: BoxShape.circle),
+//                               ),
+//                               const SizedBox(width: 12),
+//                               Expanded(
+//                                 child: Text(e,
+//                                     style: const TextStyle(
+//                                         fontSize: 14, height: 1.4)),
+//                               )
+//                             ],
+//                           ),
+//                         ))
+//                     .toList()),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
 
-  Widget _buildTreatmentSection(BuildContext context, bool isHindi) {
-    return _buildSection(
-      context: context,
-      title: isHindi ? 'उपचार' : 'Treatment',
-      icon: Icons.medical_services,
-      color: Colors.green,
-      children: [
-        _buildTreatmentCard(
-          type: isHindi ? 'रासायनिक' : 'Chemical',
-          treatment: isHindi
-              ? 'तांबा आधारित कवकनाशी का छिड़काव करें (2 ग्राम/लीटर)'
-              : 'Spray copper-based fungicide (2g/liter)',
-          icon: Icons.science,
-          color: Colors.blue,
-        ),
-        const SizedBox(height: 12),
-        _buildTreatmentCard(
-          type: isHindi ? 'जैविक' : 'Organic',
-          treatment: isHindi
-              ? 'नीम के तेल का घोल (5 मिली/लीटर पानी)'
-              : 'Neem oil solution (5ml/liter water)',
-          icon: Icons.eco,
-          color: Colors.green,
-        ),
-      ],
-    );
-  }
+//   // ---------------------------------------------------------------------------
+//   // BOTTOM BUTTONS
+//   // ---------------------------------------------------------------------------
 
-  Widget _buildPreventionSection(BuildContext context, bool isHindi) {
-    final tips = [
-      isHindi
-          ? 'संक्रमित पत्तियां तुरंत हटाएं'
-          : 'Remove infected leaves immediately',
-      isHindi
-          ? 'पौधों के बीच उचित दूरी बनाए रखें'
-          : 'Maintain proper plant spacing',
-      isHindi ? 'अधिक सिंचाई से बचें' : 'Avoid overhead irrigation',
-      isHindi ? 'खेत में स्वच्छता बनाए रखें' : 'Maintain field hygiene',
-    ];
+//   Widget _bottomButtons(BuildContext context, bool isHindi) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(horizontal: 16),
+//       child: Column(
+//         children: [
+//           SizedBox(
+//             width: double.infinity,
+//             height: 52,
+//             child: ElevatedButton.icon(
+//               onPressed: () =>
+//                   context.push('/knowledge-base/disease-encyclopedia'),
+//               icon: const Icon(Icons.menu_book_rounded),
+//               label: Text(isHindi ? 'और जानें' : 'Learn More'),
+//               style: ElevatedButton.styleFrom(
+//                 textStyle: const TextStyle(fontSize: 16),
+//                 shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(14)),
+//               ),
+//             ),
+//           ),
+//           const SizedBox(height: 12),
+//           SizedBox(
+//             width: double.infinity,
+//             height: 52,
+//             child: OutlinedButton.icon(
+//               onPressed: () => context.pop(),
+//               icon: const Icon(Icons.save_alt_rounded),
+//               label: Text(isHindi ? 'इतिहास में सहेजें' : 'Save to History'),
+//               style: OutlinedButton.styleFrom(
+//                 textStyle: const TextStyle(fontSize: 16),
+//                 shape: RoundedRectangleBorder(
+//                     borderRadius: BorderRadius.circular(14)),
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
 
-    return _buildSection(
-      context: context,
-      title: isHindi ? 'रोकथाम' : 'Prevention',
-      icon: Icons.shield,
-      color: Colors.purple,
-      children: tips.map((tip) => _buildListItem(tip)).toList(),
-    );
-  }
+//   // ---------------------------------------------------------------------------
+//   // HELPERS
+//   // ---------------------------------------------------------------------------
 
-  Widget _buildSection({
-    required BuildContext context,
-    required String title,
-    required IconData icon,
-    required Color color,
-    required List<Widget> children,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color),
-              const SizedBox(width: 8),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: children,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildListItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 6,
-            height: 6,
-            margin: const EdgeInsets.only(top: 6),
-            decoration: const BoxDecoration(
-              color: Colors.grey,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 14, height: 1.5),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTreatmentCard({
-    required String type,
-    required String treatment,
-    required IconData icon,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withOpacity(0.3)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  type,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  treatment,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[800],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildActionButtons(BuildContext context, bool isHindi) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                context.push('/knowledge-base/disease-encyclopedia');
-              },
-              icon: const Icon(Icons.book),
-              label: Text(
-                isHindi ? 'और जानें' : 'Learn More',
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                // TODO: Save to history
-                context.pop();
-              },
-              icon: const Icon(Icons.save),
-              label: Text(
-                isHindi ? 'इतिहास में सहेजें' : 'Save to History',
-                style: const TextStyle(fontSize: 16),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getSeverityColor(String severity) {
-    switch (severity.toLowerCase()) {
-      case 'high':
-        return Colors.red;
-      case 'medium':
-        return Colors.orange;
-      case 'low':
-        return Colors.green;
-      default:
-        return Colors.grey;
-    }
-  }
-}
+//   Color _severityColor(String severity) {
+//     return switch (severity.toLowerCase()) {
+//       'high' => Colors.red,
+//       'medium' => Colors.orange,
+//       'low' => Colors.green,
+//       _ => Colors.grey
+//     };
+//   }
+// }

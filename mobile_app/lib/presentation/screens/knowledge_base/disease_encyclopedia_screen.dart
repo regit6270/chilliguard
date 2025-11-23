@@ -1,5 +1,6 @@
 import 'package:chilliguard/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../widgets/knowledge_base/disease_card.dart';
 
@@ -66,7 +67,7 @@ class DiseaseEncyclopediaScreen extends StatelessWidget {
             severity: disease['severity'] as String,
             symptoms: disease['symptoms'] as String,
             onTap: () {
-              // TODO: Navigate to disease detail
+              context.push('/knowledge-base/disease/${disease['id']}');
             },
           );
         },

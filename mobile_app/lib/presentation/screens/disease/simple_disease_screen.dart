@@ -1,8 +1,10 @@
+// lib/features/camera/simple_disease_detection_screen.dart
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http_parser/http_parser.dart'; // For MediaType
+import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/constants/app_constants.dart';
@@ -23,482 +25,450 @@ class _SimpleDiseaseDetectionScreenState
   File? _selectedImage;
   bool _isLoading = false;
   Map<String, dynamic>? _detectionResult;
+  bool _showRaw = false;
 
-  // ✅ Correct backend URL (baseUrl already includes /api/v1)
   static const String BACKEND_URL =
       '${AppConstants.baseUrl}/api/v1/disease/detect';
-  //static const String USER_TOKEN = 'your-auth-token'; // Add your auth token
 
   @override
   void initState() {
     super.initState();
-    _setupDio();
-  }
-
-  void _setupDio() {
     _dio.options.connectTimeout = const Duration(seconds: 30);
     _dio.options.receiveTimeout = const Duration(seconds: 30);
-    _dio.options.headers = {
-      //'Authorization': 'Bearer $USER_TOKEN',
-    };
   }
 
-  Future<void> _pickImageFromGallery() async {
+  Future<void> _pick(ImageSource s) async {
     try {
-      final XFile? image = await _picker.pickImage(
-        source: ImageSource.gallery,
+      final XFile? f = await _picker.pickImage(
+        source: s,
         imageQuality: 85,
+        maxWidth: 2000,
+        maxHeight: 2000,
       );
-
-      if (image != null) {
-        setState(() {
-          _selectedImage = File(image.path);
-          _detectionResult = null;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('✅ Image selected'), backgroundColor: Colors.green),
-        );
-      }
+      if (f == null) return;
+      setState(() {
+        _selectedImage = File(f.path);
+        _detectionResult = null;
+      });
     } catch (e) {
-      _showError('Error picking image: $e');
+      _showSnack('Error picking image: $e', isError: true);
     }
   }
 
   Future<void> _uploadAndDetect() async {
     if (_selectedImage == null) {
-      _showError('Please select an image first');
+      _showSnack('Please select an image first', isError: true);
       return;
     }
 
     setState(() {
       _isLoading = true;
+      _detectionResult = null;
+      _showRaw = false;
     });
 
     try {
-      print('📤 Uploading image to: $BACKEND_URL');
-
       final formData = FormData.fromMap({
         'image': await MultipartFile.fromFile(
           _selectedImage!.path,
-          filename:
-              'leaf_image_${DateTime.now().millisecondsSinceEpoch}.jpg', // ✅ Add filename
-          contentType: MediaType('image', 'jpeg'), // ✅ Add content type
+          filename: 'leaf_${DateTime.now().millisecondsSinceEpoch}.jpg',
+          contentType: MediaType('image', 'jpeg'),
         ),
-        'user_id': 'demo_user_001', // ✅ Match seed_data.py demo user
-        'field_id': 'field_123', // ✅ Match seed_data.py demo field
-        'batch_id': 'batch_123', // ✅ Match seed_data.py demo batch (optional)
+        'user_id': 'demo_user_001',
+        'field_id': 'field_123',
       });
 
-      final response = await _dio.post(
+      final resp = await _dio.post(
         BACKEND_URL,
         data: formData,
-        options: Options(
-          contentType: 'multipart/form-data',
-        ),
+        options: Options(contentType: 'multipart/form-data'),
       );
 
-      if (response.statusCode == 200) {
-        // Check if backend returned an error status
-        if (response.data is Map && response.data['status'] == 'error') {
-          _showError(response.data['message'] ?? 'Detection failed');
-          setState(() => _isLoading = false);
-          return;
+      if (resp.statusCode == 200) {
+        final data = resp.data is Map
+            ? Map<String, dynamic>.from(resp.data)
+            : {'raw': resp.data};
+        if ((data['status'] == 'error') || (data['error'] != null)) {
+          _showSnack(
+              data['message']?.toString() ??
+                  data['error']?.toString() ??
+                  'Detection failed',
+              isError: true);
+        } else {
+          setState(() => _detectionResult = data);
         }
-
-        setState(() {
-          _detectionResult = response.data;
-          _isLoading = false;
-        });
-        print('✅ Detection successful: ${response.data}');
       } else {
-        _showError('Server error: ${response.statusCode}');
-        setState(() => _isLoading = false);
+        _showSnack('Server error: ${resp.statusCode}', isError: true);
       }
     } on DioException catch (e) {
-      String errorMsg = 'Connection error';
-      if (e.response != null) {
-        errorMsg = e.response?.data['error'] ?? 'Detection failed';
-      } else if (e.type == DioExceptionType.connectionTimeout) {
-        errorMsg = 'Connection timeout - check backend URL';
+      String msg = 'Connection error';
+      if (e.type == DioExceptionType.connectionTimeout) msg = 'Connection timeout';
+      else if (e.response != null && e.response?.data != null) {
+        final d = e.response?.data;
+        if (d is Map && d['error'] != null) msg = d['error'].toString();
       }
-      _showError(errorMsg);
-      setState(() => _isLoading = false);
+      _showSnack(msg, isError: true);
     } catch (e) {
-      _showError('Error: $e');
-      setState(() => _isLoading = false);
+      _showSnack('Error: $e', isError: true);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showError(String message) {
+  void _showSnack(String text, {bool isError = false}) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      ),
+      SnackBar(content: Text(text), backgroundColor: isError ? Colors.red : Colors.green),
     );
   }
 
-  Color _getSeverityColor(String? severity) {
-    switch (severity?.toLowerCase()) {
+  Color _severityColor(String? s) {
+    switch (s?.toLowerCase()) {
       case 'critical':
-        return Colors.red;
+        return Colors.red.shade700;
       case 'high':
-        return Colors.deepOrange;
+        return Colors.deepOrange.shade700;
       case 'medium':
-        return Colors.amber;
+        return Colors.amber.shade800;
       case 'low':
-        return Colors.yellow;
+        return Colors.green.shade700;
       default:
-        return Colors.green;
+        return Colors.blueGrey.shade700;
     }
+  }
+
+  String _prettyRaw() {
+    if (_detectionResult == null) return '';
+    try {
+      return const JsonEncoder.withIndent('  ').convert(_detectionResult);
+    } catch (_) {
+      return _detectionResult.toString();
+    }
+  }
+
+  Widget _treatmentTile(dynamic item) {
+    if (item is Map) {
+      final name = item['name'] ?? '';
+      final type = item['type'] ?? '';
+      final dosage = item['dosage'] ?? '';
+      final desc = item['description'] ?? '';
+      final parts = <String>[];
+      if (name.toString().isNotEmpty) parts.add(name.toString());
+      if (type.toString().isNotEmpty) parts.add(type.toString());
+      if (dosage.toString().isNotEmpty) parts.add('Dosage: ${dosage.toString()}');
+      final summary = parts.join(' • ');
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (summary.isNotEmpty)
+            Text(summary, style: const TextStyle(fontWeight: FontWeight.bold)),
+          if (desc.toString().isNotEmpty) const SizedBox(height: 6),
+          if (desc.toString().isNotEmpty) Text(desc.toString()),
+        ],
+      );
+    }
+    return Text(item.toString());
+  }
+
+  void _openPreview() {
+    if (_selectedImage == null) return;
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        final size = MediaQuery.of(ctx).size;
+        final maxW = size.width * 0.94;
+        final maxH = size.height * 0.84;
+        return Dialog(
+          insetPadding: const EdgeInsets.all(12),
+          child: ConstrainedBox(
+            constraints:
+                BoxConstraints(maxWidth: maxW, maxHeight: maxH, minWidth: 100, minHeight: 100),
+            child: Column(
+              children: [
+                Expanded(
+                  child: InteractiveViewer(
+                    child: Image.file(_selectedImage!, fit: BoxFit.contain, width: double.infinity, height: double.infinity),
+                  ),
+                ),
+                TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final imageHeight = 300.0;
+
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.maybePop(context),
+        ),
         title: const Text('Disease Detection'),
-        backgroundColor: Colors.green,
-        elevation: 0,
+        centerTitle: true,
+        elevation: 0.5,
       ),
-      body: _isLoading
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text('Analyzing leaf...'),
-                ],
-              ),
-            )
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  // ===== IMAGE DISPLAY =====
-                  Container(
-                    height: 300,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color:
-                            _selectedImage != null ? Colors.green : Colors.grey,
-                        width: 2,
+      body: CustomScrollView(
+        slivers: [
+          // SliverAppBar holds the image only. Disable its automatic leading and toolbar to avoid double back arrows.
+          SliverAppBar(
+            automaticallyImplyLeading: false,
+            pinned: false,
+            floating: false,
+            expandedHeight: imageHeight,
+            backgroundColor: theme.scaffoldBackgroundColor,
+            toolbarHeight: 0, // hide secondary toolbar
+            flexibleSpace: FlexibleSpaceBar(
+              background: GestureDetector(
+                onTap: _selectedImage != null ? _openPreview : null,
+                child: _selectedImage != null
+                    ? Image.file(_selectedImage!, fit: BoxFit.cover, width: double.infinity, height: double.infinity)
+                    : Container(
+                        color: Colors.grey.shade100,
+                        alignment: Alignment.center,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.image_outlined, size: 56, color: Colors.grey),
+                            SizedBox(height: 8),
+                            Text('No image selected'),
+                          ],
+                        ),
                       ),
-                      color: Colors.grey[100],
-                    ),
-                    child: _selectedImage != null
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(10),
-                            child:
-                                Image.file(_selectedImage!, fit: BoxFit.cover),
-                          )
-                        : const Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.image_not_supported,
-                                    size: 60, color: Colors.grey),
-                                SizedBox(height: 10),
-                                Text('No image selected'),
-                              ],
-                            ),
-                          ),
-                  ),
-                  const SizedBox(height: 24),
+              ),
+            ),
+          ),
 
-                  // ===== BUTTONS =====
+          SliverPadding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate(
+                [
                   Row(
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: _pickImageFromGallery,
-                          icon: const Icon(Icons.image),
+                          onPressed: () => _pick(ImageSource.gallery),
+                          icon: const Icon(Icons.photo_library),
                           label: const Text('Gallery'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.blue,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
+                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      if (_selectedImage != null)
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: _uploadAndDetect,
-                            icon: const Icon(Icons.search),
-                            label: const Text('Detect'),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.orange,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () => _pick(ImageSource.camera),
+                          icon: const Icon(Icons.camera_alt),
+                          label: const Text('Camera'),
+                          style: ElevatedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
                         ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _selectedImage == null || _isLoading ? null : _uploadAndDetect,
+                          icon: const Icon(Icons.search),
+                          label: const Text('Detect'),
+                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _selectedImage == null ? null : () => setState(() => _selectedImage = null),
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text('Clear'),
+                          style: OutlinedButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 14)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  if (_isLoading) const LinearProgressIndicator(),
+                  const SizedBox(height: 8),
 
-                  // ===== RESULTS DISPLAY =====
                   if (_detectionResult != null) ...[
                     Card(
-                      elevation: 4,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 2,
                       child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _detectionResult!['disease_name'] ??
-                                            'Unknown',
-                                        style: const TextStyle(
-                                          fontSize: 22,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        _detectionResult!['scientific_name'] ??
-                                            '',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey[600],
-                                          fontStyle: FontStyle.italic,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: _getSeverityColor(
-                                      _detectionResult!['severity'],
-                                    ).withOpacity(0.2),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(
-                                      color: _getSeverityColor(
-                                        _detectionResult!['severity'],
-                                      ),
+                            Container(
+                              width: 64,
+                              height: 64,
+                              alignment: Alignment.center,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Colors.grey.shade300),
+                              ),
+                              child: Text(
+                                '${((_detectionResult!['confidence'] ?? 0) * 100).toStringAsFixed(0)}%',
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(_detectionResult!['disease_name'] ?? 'Unknown',
+                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                                  const SizedBox(height: 6),
+                                  if ((_detectionResult!['scientific_name'] as String?)?.isNotEmpty ?? false)
+                                    Text(_detectionResult!['scientific_name'] ?? '',
+                                        style: const TextStyle(fontStyle: FontStyle.italic, fontSize: 13)),
+                                  const SizedBox(height: 8),
+                                  Wrap(spacing: 8, runSpacing: 6, children: [
+                                    Chip(
+                                      label: Text(_detectionResult!['severity']?.toString() ?? 'Unknown',
+                                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w700)),
+                                      backgroundColor: (_detectionResult!['severity'] is String)
+                                          ? _severityColor(_detectionResult!['severity'] as String).withOpacity(0.15)
+                                          : Colors.grey.shade100,
                                     ),
-                                  ),
-                                  child: Text(
-                                    _detectionResult!['severity'] ?? 'Unknown',
-                                    style: TextStyle(
-                                      color: _getSeverityColor(
-                                        _detectionResult!['severity'],
-                                      ),
-                                      fontWeight: FontWeight.bold,
+                                    Chip(
+                                      label: Text(
+                                          '${(_detectionResult!['affected_area_percentage'] ?? 0).toStringAsFixed(1)}% affected',
+                                          style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w700)),
+                                      backgroundColor: Colors.grey.shade100,
                                     ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const Divider(height: 20),
-
-                            // Confidence
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Confidence:'),
-                                Text(
-                                  '${((_detectionResult!['confidence'] ?? 0) * 100).toStringAsFixed(1)}%',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-
-                            // Affected Area
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text('Affected Area:'),
-                                Text(
-                                  '${(_detectionResult!['affected_area_percentage'] ?? 0).toStringAsFixed(1)}%',
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-
-                            // Description
-                            Text(
-                              _detectionResult!['description'] ?? '',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[700],
-                                height: 1.5,
+                                  ])
+                                ],
                               ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
 
-                    // ===== SYMPTOMS =====
-                    if (_detectionResult!['symptoms'] != null &&
-                        (_detectionResult!['symptoms'] as List).isNotEmpty)
-                      _buildSection(
-                        'Symptoms',
-                        _detectionResult!['symptoms'],
-                        Icons.warning,
-                        Colors.orange,
-                      ),
                     const SizedBox(height: 12),
 
-                    // ===== TREATMENTS =====
-                    if (_detectionResult!['treatments'] != null &&
-                        (_detectionResult!['treatments'] as List).isNotEmpty)
-                      _buildTreatmentSection(_detectionResult!['treatments']),
-                    const SizedBox(height: 12),
-
-                    // ===== RECOMMENDATIONS =====
-                    if (_detectionResult!['recommendations'] != null &&
-                        (_detectionResult!['recommendations'] as List)
-                            .isNotEmpty)
-                      _buildSection(
-                        'Recommendations',
-                        _detectionResult!['recommendations'],
-                        Icons.lightbulb,
-                        Colors.amber,
-                      ),
-                  ],
-                ],
-              ),
-            ),
-    );
-  }
-
-  Widget _buildSection(
-    String title,
-    List<dynamic> items,
-    IconData icon,
-    Color color,
-  ) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color),
-                const SizedBox(width: 8),
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...items.asMap().entries.map((entry) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${entry.key + 1}. ',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    Expanded(
-                      child: Text(entry.value.toString()),
-                    ),
-                  ],
-                ),
-              );
-            }),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTreatmentSection(List<dynamic> treatments) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.healing, color: Colors.green),
-                SizedBox(width: 8),
-                Text(
-                  'Treatments',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            ...(treatments).asMap().entries.map((entry) {
-              final treatment = entry.value as Map<String, dynamic>;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Chip(
-                          label: Text(
-                            treatment['type'] ?? '',
-                            style: const TextStyle(fontSize: 11),
-                          ),
-                          backgroundColor: Colors.green[100],
+                    if ((_detectionResult!['description'] as String?)?.isNotEmpty ?? false)
+                      Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Text(_detectionResult!['description'] ?? ''),
                         ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            treatment['name'] ?? '',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+
+                    const SizedBox(height: 12),
+
+                    if (_detectionResult!['symptoms'] is List && (_detectionResult!['symptoms'] as List).isNotEmpty)
+                      Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const Text('Symptoms', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            ...(_detectionResult!['symptoms'] as List).asMap().entries.map((e) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text('${e.key + 1}. ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  Expanded(child: Text(e.value.toString())),
+                                ]),
+                              );
+                            }),
+                          ]),
+                        ),
+                      ),
+
+                    const SizedBox(height: 12),
+
+                    if (_detectionResult!['treatments'] is List && (_detectionResult!['treatments'] as List).isNotEmpty)
+                      Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const Text('Treatments', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            ...(_detectionResult!['treatments'] as List).asMap().entries.map((e) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 12),
+                                child: _treatmentTile(e.value),
+                              );
+                            }),
+                          ]),
+                        ),
+                      ),
+
+                    const SizedBox(height: 12),
+
+                    if (_detectionResult!['recommendations'] is List && (_detectionResult!['recommendations'] as List).isNotEmpty)
+                      Card(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(14),
+                          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                            const Text('Recommendations', style: TextStyle(fontWeight: FontWeight.bold)),
+                            const SizedBox(height: 8),
+                            ...(_detectionResult!['recommendations'] as List).asMap().entries.map((e) {
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 6),
+                                child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                  Text('${e.key + 1}. ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                  Expanded(child: Text(e.value.toString())),
+                                ]),
+                              );
+                            }),
+                          ]),
+                        ),
+                      ),
+
+                    const SizedBox(height: 12),
+
+                    ExpansionTile(
+                      title: const Text('Raw response'),
+                      initiallyExpanded: _showRaw,
+                      onExpansionChanged: (open) => setState(() => _showRaw = open),
+                      children: [
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          color: Colors.grey.shade50,
+                          child: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: SelectableText(
+                              _prettyRaw(),
+                              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      treatment['description'] ?? '',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[700],
+                    const SizedBox(height: 24),
+                  ] else ...[
+                    const SizedBox(height: 6),
+                    Card(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      child: Padding(
+                        padding: const EdgeInsets.all(18),
+                        child: Center(child: Text('No detection results yet. Tap Detect to analyze the image.', style: theme.textTheme.bodyMedium)),
                       ),
                     ),
+                    const SizedBox(height: 24),
                   ],
-                ),
-              );
-            }),
-          ],
-        ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,0 +1,64 @@
+
+# Flask Configuration
+FLASK_APP=app
+FLASK_ENV=development
+SECRET_KEY=acJR5mpWUdx92sgKlIamfbFyaspzHDw1d44lP5rY
+DEBUG=True
+
+# Firebase & Google Cloud
+FIREBASE_CREDENTIALS_PATH=D:\mehrs\VSCodeProjects\chilliguard\backend\firebase-credentials.json
+FIREBASE_STORAGE_BUCKET=soilmonitoringapp-76262.appspot.com
+GCP_PROJECT_ID=soilmonitoringapp-76262
+GCP_REGION=asia-south1
+CLOUD_STORAGE_BUCKET=soilmonitoringapp-76262.appspot.com
+FIREBASE_RTDB_URL=https://soilmonitoringapp-76262-default-rtdb.firebaseio.com/
+
+
+# Firestore
+FIRESTORE_DATABASE=(default)
+
+# Vertex AI (Optional for now - use on-device model first)
+VERTEX_AI_ENDPOINT=
+VERTEX_AI_MODEL=chilli-disease-detection-v1
+
+# MQTT / ThingsBoard (Your friend's IoT setup)
+MQTT_BROKER_HOST=mqtt.thingsboard.cloud
+MQTT_BROKER_PORT=1883
+MQTT_USERNAME=your-device-token
+MQTT_PASSWORD=
+MQTT_TOPIC_PREFIX=chilliguard/fields
+
+# Redis (for Celery - can use local Redis for development)
+REDIS_URL=redis://localhost:6379/0
+CELERY_BROKER_URL=redis://localhost:6379/0
+CELERY_RESULT_BACKEND=redis://localhost:6379/0
+
+# ML Model Settings
+TFLITE_MODEL_PATH=models/disease_detection_v1.tflite
+MODEL_CONFIDENCE_THRESHOLD=0.80
+MAX_IMAGE_SIZE=2048
+
+# Crop Requirements (Chilli)
+CHILLI_PH_MIN=5.5
+CHILLI_PH_MAX=7.5
+CHILLI_N_MIN=100.0
+CHILLI_N_MAX=150.0
+CHILLI_P_MIN=50.0
+CHILLI_P_MAX=75.0
+CHILLI_K_MIN=50.0
+CHILLI_K_MAX=100.0
+CHILLI_MOISTURE_MIN=60.0
+CHILLI_MOISTURE_MAX=70.0
+CHILLI_TEMP_MIN=20.0
+CHILLI_TEMP_MAX=30.0
+
+# Notification Settings
+FCM_SERVER_KEY=
+MAX_CRITICAL_ALERTS_PER_DAY=5
+
+# API Configuration
+ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5000,http://localhost:8080
+
+# Sensor Settings
+SENSOR_CACHE_LIMIT=50
+SENSOR_UPDATE_INTERVAL_MINUTES=30

@@ -16,6 +16,9 @@ import '../../presentation/screens/dashboard/feasibility_check_screen.dart';
 import '../../presentation/screens/disease/simple_disease_screen.dart';
 import '../../presentation/screens/knowledge_base/article_detail_screen.dart';
 import '../../presentation/screens/knowledge_base/knowledge_base_screen.dart';
+import '../../presentation/screens/knowledge_base/disease_encyclopedia_screen.dart';
+import '../../presentation/widgets/knowledge_base/disease_detail_screen.dart';
+import '../../presentation/screens/knowledge_base/faq_screen.dart';
 import '../../presentation/screens/profile/add_field_screen.dart';
 import '../../presentation/screens/profile/field_management_screen.dart';
 import '../../presentation/screens/profile/profile_screen.dart';
@@ -83,14 +86,6 @@ class AppRouter {
         name: 'feasibility-check',
         builder: (context, state) => const FeasibilityCheckScreen(),
       ),
-      // GoRoute(
-      //   path: '/improvement-recommendations/:fieldId',
-      //   name: 'improvement-recommendations',
-      //   builder: (context, state) {
-      //     final fieldId = state.pathParameters['fieldId']!;
-      //     return ImprovementRecommendationsScreen(fieldId: fieldId);
-      //   },
-      // ), ADD THIS RECOMMENDATIONS SCREEN LATER
 
       // Camera & Disease Detection Routes
       GoRoute(
@@ -98,16 +93,6 @@ class AppRouter {
         name: 'camera',
         builder: (context, state) => const CameraScreen(),
       ),
-
-      // GoRoute(
-      //   path: '/disease-result/:detectionId',
-      //   name: 'disease-result',
-      //   builder: (context, state) {
-      //     final detectionId = state.pathParameters['detectionId']!;
-      //     return DiseaseResultScreen(detectionId: detectionId);
-      //   },
-      // ),
-
       GoRoute(
         path: '/disease-detection',
         name: 'disease-detection',
@@ -140,7 +125,7 @@ class AppRouter {
       GoRoute(
         path: '/crop-batches',
         name: 'crop-batches',
-        builder: (context, state) => const BatchListScreen(), // ✅ FIXED
+        builder: (context, state) => const BatchListScreen(),
       ),
       GoRoute(
         path: '/batch/:id',
@@ -160,16 +145,8 @@ class AppRouter {
       GoRoute(
         path: '/reports',
         name: 'reports',
-        builder: (context, state) => const ReportsListScreen(), // ✅ FIXED
+        builder: (context, state) => const ReportsListScreen(),
       ),
-      // GoRoute(
-      //   path: '/end-cycle-report/:batchId',
-      //   name: 'end-cycle-report',
-      //   builder: (context, state) {
-      //     final batchId = state.pathParameters['batchId']!;
-      //     return EndCycleReportScreen(batchId: batchId);
-      //   },
-      // ),
       GoRoute(
         path: '/reports/end-cycle/:reportId',
         name: 'end-cycle-report',
@@ -178,7 +155,6 @@ class AppRouter {
           return EndCycleReportScreen(reportId: reportId);
         },
       ),
-
       GoRoute(
         path: '/reports/comparison/:reportId',
         name: 'batch-comparison',
@@ -194,6 +170,8 @@ class AppRouter {
         name: 'knowledge-base',
         builder: (context, state) => const KnowledgeBaseScreen(),
       ),
+
+      // Article detail - keep the short form and also add canonical KB path as alias
       GoRoute(
         path: '/article/:id',
         name: 'article-detail',
@@ -201,6 +179,36 @@ class AppRouter {
           final articleId = state.pathParameters['id']!;
           return ArticleDetailScreen(articleId: articleId);
         },
+      ),
+      GoRoute(
+        path: '/knowledge-base/article/:id',
+        name: 'article-detail-kb',
+        builder: (context, state) {
+          final articleId = state.pathParameters['id']!;
+          return ArticleDetailScreen(articleId: articleId);
+        },
+      ),
+
+      // KB: disease encyclopedia & disease detail
+      GoRoute(
+        path: '/knowledge-base/disease-encyclopedia',
+        name: 'disease-encyclopedia',
+        builder: (context, state) => const DiseaseEncyclopediaScreen(),
+      ),
+      GoRoute(
+        path: '/knowledge-base/disease/:id',
+        name: 'disease-detail',
+        builder: (context, state) {
+          final diseaseId = state.pathParameters['id']!;
+          return DiseaseDetailScreen(diseaseId: diseaseId);
+        },
+      ),
+
+      // FAQ route
+      GoRoute(
+        path: '/knowledge-base/faq',
+        name: 'faq',
+        builder: (context, state) => const FaqScreen(),
       ),
 
       // Profile Routes

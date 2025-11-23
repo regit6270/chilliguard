@@ -4,262 +4,416 @@ Based on model_info.json: Bacterial Spot, Cercospora, Curl Virus, Healthy, Nutri
 """
 
 DISEASE_CLASSES = {
-    0: {
-        'name': 'Bacterial Spot',
-        'scientific_name': 'Xanthomonas campestris pv. vesicatoria',
-        'description': 'Bacterial infection causing necrotic spots on leaves and fruits',
-        'symptoms': ['Small water-soaked lesions', 'Brown/black spots with yellow halos', 'Leaf yellowing', 'Premature defoliation', 'Fruit lesions'],
-        'causes': ['Xanthomonas bacteria', 'Warm humid weather', 'Overhead irrigation', 'Poor air circulation', 'Contaminated seeds'],
+0: {
+        'name': 'Bacterial Spot (Pepper)',
+        'scientific_name': 'Xanthomonas spp. (X. euvesicatoria / X. vesicatoria)',
+        'description': 'Bacterial disease of chilli/pepper causing necrotic leaf and fruit spots, yellow halos and defoliation; important in Indian pepper-growing regions.',
+        'symptoms': [
+            'Small water-soaked lesions on leaves and fruits',
+            'Brown/black circular spots often with yellow halos',
+            'Leaf yellowing around lesions',
+            'Premature defoliation and reduced fruit marketability'
+        ],
+        'causes': [
+            'Xanthomonas species (seed- and splash-borne)',
+            'Warm, humid weather and rain-splash dissemination',
+            'Overhead irrigation and contaminated seeds/seedlings',
+            'Poor field sanitation and volunteer hosts'
+        ],
         'severity': 'High',
         'treatments': [
-            {
-                'type': 'Chemical',
-                'name': 'Copper-based fungicide',
-                'description': 'Spray 1% Bordeaux mixture or Copper Oxychloride (3g/liter) every 7-10 days',
-                'dosage': '3g per liter',
-                'frequency': 'Every 7-10 days'
-            },
-            {
-                'type': 'Antibiotic',
-                'name': 'Streptocycline',
-                'description': 'Apply Streptocycline (0.5g per liter) + Copper Oxychloride',
-                'dosage': '0.5g per liter',
-                'frequency': 'Every 10 days'
-            },
-            {
-                'type': 'Cultural',
-                'name': 'Field sanitation',
-                'description': 'Remove infected plant parts immediately and destroy',
-                'dosage': 'N/A',
-                'frequency': 'As needed'
-            }
+            {'type': 'Chemical', 'name': 'Copper oxychloride / Bordeaux mixture',
+             'description': 'Copper sprays reduce surface inoculum; apply at label rates every 7–10 days during epidemic periods.',
+             'dosage': 'Follow product label (typical: 2–3 g/L for formulations)',
+             'frequency': 'Every 7–10 days'},
+            {'type': 'Biocontrol', 'name': 'Bacillus / Pseudomonas bioagents',
+             'description': 'Seed or foliar bioagents (Bacillus subtilis, Pseudomonas spp.) shown to antagonize Xanthomonas in Indian trials.',
+             'dosage': 'Per product label',
+             'frequency': 'As directed'},
+            {'type': 'Cultural', 'name': 'Sanitation & seed health',
+             'description': 'Use certified disease-free seed, remove infected plants, avoid overhead irrigation and reduce splash.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
         ],
         'recommendations': [
-            'Remove infected leaves and fruits immediately',
-            'Ensure good air circulation by proper spacing (60x45 cm)',
-            'Avoid overhead irrigation - use drip irrigation',
-            'Apply copper-based fungicide preventively during rainy season',
-            'Use disease-free certified seeds',
-            'Crop rotation with non-host crops',
-            'Maintain field hygiene'
+            'Use certified, disease-free seed and treat seed if needed',
+            'Prefer drip irrigation; avoid overhead watering',
+            'Maintain spacing & airflow; rogue infected plants',
+            'Rotate non-host crops and sanitize tools'
+        ],
+        'sources': [
+            ':contentReference[oaicite:0]{index=0}',  # ICAR characterization of Xanthomonas in India
+            ':contentReference[oaicite:1]{index=1}'   # IJCMAS in vitro bioagent study (India)
         ]
     },
+
     1: {
-        'name': 'Cercospora Leaf Spot',
-        'scientific_name': 'Cercospora capsici',
-        'description': 'Fungal disease causing circular leaf spots with concentric rings',
-        'symptoms': ['Circular brown spots with gray centers', 'Concentric rings (target spot)', 'Yellowing around lesions', 'Premature leaf drop', 'Reduced yield'],
-        'causes': ['Cercospora fungus', 'High humidity (>85%)', 'Warm temperature (25-30°C)', 'Prolonged leaf wetness', 'Dense plant canopy'],
+        'name': 'Healthy (Pepper)',
+        'scientific_name': 'Capsicum annuum (Healthy)',
+        'description': 'No visible disease symptoms; normal vigour.',
+        'symptoms': ['Uniform green leaves', 'No necrotic spots', 'Normal plant vigour'],
+        'causes': ['Optimal nutrition', 'Proper irrigation', 'No pest presence'],
+        'severity': 'None',
+        'treatments': [],
+        'recommendations': [
+            'Maintain regular monitoring',
+            'Use balanced fertilizers and proper irrigation',
+            'Keep field and tools clean'
+        ],
+        'sources': []
+    },
+
+    2: {
+        'name': 'Early Blight',
+        'scientific_name': 'Alternaria solani',
+        'description': 'Fungal disease causing concentric ring (target) lesions on tomato and potato leaves; significant yield losses reported in India.',
+        'symptoms': [
+            'Brown circular lesions with concentric rings on leaves',
+            'Yellowing (chlorosis) around lesions',
+            'Progressive defoliation under favourable conditions'
+        ],
+        'causes': [
+            'Alternaria solani infection (spore-borne)',
+            'Warm humid conditions and prolonged leaf wetness',
+            'Nutrient stress (e.g., nitrogen deficiency) can exacerbate severity'
+        ],
         'severity': 'High',
         'treatments': [
-            {
-                'type': 'Fungicide',
-                'name': 'Mancozeb',
-                'description': 'Spray Mancozeb 75% WP (2.5g/liter) every 10-12 days',
-                'dosage': '2.5g per liter',
-                'frequency': 'Every 10-12 days'
-            },
-            {
-                'type': 'Fungicide',
-                'name': 'Carbendazim',
-                'description': 'Spray Carbendazim 0.5g/liter alternating with Mancozeb',
-                'dosage': '0.5g per liter',
-                'frequency': 'Every 10-12 days (alternating)'
-            },
-            {
-                'type': 'Organic',
-                'name': 'Neem oil',
-                'description': 'Spray 3-5% Neem oil solution as preventive measure',
-                'dosage': '30-50ml per liter',
-                'frequency': 'Every 7-10 days'
-            }
+            {'type': 'Fungicide', 'name': 'Mancozeb',
+             'description': 'Protectant fungicide commonly used in Indian tomato/potato programs.',
+             'dosage': 'Typical: ~2–2.5 g/L (follow label)',
+             'frequency': 'Every 7–14 days depending on pressure'},
+            {'type': 'Fungicide', 'name': 'Azoxystrobin / QoI systemic',
+             'description': 'Systemic option for severe outbreaks; rotate modes of action to reduce resistance.',
+             'dosage': 'Per label',
+             'frequency': 'As needed under high disease pressure'},
+            {'type': 'Cultural', 'name': 'Crop hygiene & nutrition',
+             'description': 'Remove infected foliage, improve aeration, ensure balanced fertilization.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
         ],
         'recommendations': [
-            'Remove infected leaves immediately',
-            'Improve air circulation through pruning',
-            'Avoid wetting foliage during irrigation',
-            'Apply fungicide preventively during monsoon',
-            'Maintain proper plant spacing',
-            'Use mulching to prevent soil splash',
-            'Avoid working in wet fields'
+            'Use drip irrigation / avoid overhead watering',
+            'Remove infected leaves promptly',
+            'Maintain balanced N fertilization; adopt resistant varieties where available'
+        ],
+        'sources': [
+            ':contentReference[oaicite:2]{index=2}',  # Alternaria review mentioning Indian isolates
+            ':contentReference[oaicite:3]{index=3}'   # Indian fungicide evaluation studies
         ]
     },
-    2: {
-        'name': 'Curl Virus',
-        'scientific_name': 'Chilli Leaf Curl Virus (ChiLCV)',
-        'description': 'Viral disease causing severe leaf curling, yellowing and stunting transmitted by whiteflies',
-        'symptoms': ['Upward/downward leaf curling', 'Yellowing of young leaves', 'Severe stunting', 'Reduced fruit size', 'Flower drop', 'Distorted leaf shape'],
-        'causes': ['Chilli leaf curl virus', 'Whitefly vector (Bemisia tabaci)', 'Virus transmission from infected plants', 'Warm weather (25-35°C)'],
+
+    3: {
+        'name': 'Late Blight',
+        'scientific_name': 'Phytophthora infestans',
+        'description': 'Highly destructive oomycete disease of potato and tomato causing water-soaked lesions and rapid crop collapse; recurrent and serious in many Indian states.',
+        'symptoms': [
+            'Water-soaked dark lesions on leaves and stems',
+            'White/grayish sporulation on leaf undersides in humid conditions',
+            'Rapid leaf collapse and stem death under favourable conditions'
+        ],
+        'causes': [
+            'Phytophthora infestans infection (sporangia, zoospores)',
+            'Cool, humid weather, poor air circulation, waterlogging',
+            'Volunteer potatoes and infected tubers acting as inoculum sources'
+        ],
         'severity': 'Critical',
         'treatments': [
-            {
-                'type': 'Insecticide',
-                'name': 'Imidacloprid',
-                'description': 'Spray Imidacloprid 17.8% SL (0.5ml/liter) for whitefly control',
-                'dosage': '0.5ml per liter',
-                'frequency': 'Every 7 days'
-            },
-            {
-                'type': 'Insecticide',
-                'name': 'Thiamethoxam',
-                'description': 'Spray Thiamethoxam 25% WG (0.3g/liter) alternating with Imidacloprid',
-                'dosage': '0.3g per liter',
-                'frequency': 'Every 7 days (alternating)'
-            },
-            {
-                'type': 'Organic',
-                'name': 'Neem oil',
-                'description': 'Spray 3% Neem oil + sticky yellow traps for whitefly management',
-                'dosage': '30ml per liter',
-                'frequency': 'Every 5-7 days'
-            },
-            {
-                'type': 'Cultural',
-                'name': 'Rogue infected plants',
-                'description': 'Remove and destroy severely infected plants immediately',
-                'dosage': 'N/A',
-                'frequency': 'Weekly monitoring'
-            }
+            {'type': 'Fungicide/Oomycide', 'name': 'Metalaxyl + Mancozeb (or other appropriate oomycides)',
+             'description': 'Use labeled oomycide mixtures effective against P. infestans; integrate cultural controls.',
+             'dosage': 'Per product label (example: 1.5–2 g/L depending on formulation)',
+             'frequency': '7–10 days under epidemic conditions'},
+            {'type': 'Cultural', 'name': 'Sanitation & resistant clones',
+             'description': 'Destroy heavily infected plants/tubers, use certified seed tubers and adopt resistant varieties where available.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
         ],
         'recommendations': [
-            'Remove severely infected plants immediately and destroy',
-            'Control whitefly population aggressively',
-            'Use yellow sticky traps (20-25 per acre)',
-            'Apply reflective mulch (silver/white)',
-            'Use resistant/tolerant varieties if available',
-            'Avoid water stress',
-            'Border crop with marigold to trap whiteflies',
-            'Maintain weed-free fields'
-        ]
-    },
-    3: {
-        'name': 'Healthy Leaf',
-        'scientific_name': 'Healthy',
-        'description': 'Plant showing no signs of disease or stress - optimal health',
-        'symptoms': ['Normal dark green color', 'No spots or lesions', 'Normal growth', 'Healthy fruit development'],
-        'causes': ['Good growing conditions', 'Proper nutrition', 'Adequate water', 'Pest-free environment'],
-        'severity': 'None',
-        'treatments': [
-            {
-                'type': 'Preventive',
-                'name': 'Regular monitoring',
-                'description': 'Continue regular field monitoring and maintenance',
-                'dosage': 'N/A',
-                'frequency': 'Weekly'
-            },
-            {
-                'type': 'Nutrition',
-                'name': 'Balanced fertilization',
-                'description': 'Apply balanced NPK as per soil test recommendations',
-                'dosage': 'As per soil test',
-                'frequency': 'Monthly'
-            }
+            'Avoid waterlogging and improve drainage',
+            'Use certified seed/tubers; remove infected plants',
+            'Monitor weather and apply protective sprays pre-emptively when conditions favour disease'
         ],
-        'recommendations': [
-            'Continue current management practices',
-            'Maintain optimal soil moisture (60-70% field capacity)',
-            'Provide 6-8 hours of sunlight daily',
-            'Apply NPK fertilizer: 100:60:60 kg/ha split doses',
-            'Continue regular pest monitoring',
-            'Maintain proper spacing and pruning',
-            'Apply organic mulch to conserve moisture'
+        'sources': [
+            ':contentReference[oaicite:4]{index=4}',  # Late blight emergence and impact in South India
+            ':contentReference[oaicite:5]{index=5}'   # Recent studies/reviews on potato late blight (India)
         ]
     },
+
     4: {
-        'name': 'Nutrition Deficiency',
-        'scientific_name': 'Nutrient Deficiency Syndrome',
-        'description': 'Nutritional imbalance causing yellowing, stunting and poor growth - primarily Nitrogen deficiency',
-        'symptoms': ['Yellowing of older leaves (chlorosis)', 'Interveinal chlorosis', 'Stunted growth', 'Reduced fruiting', 'Pale green to yellow leaves', 'Thin stems'],
-        'causes': ['Low nitrogen in soil', 'Imbalanced fertilization', 'Poor soil quality', 'Excessive leaching', 'Low organic matter', 'Improper pH'],
-        'severity': 'Medium',
+        'name': 'Healthy (Potato)',
+        'scientific_name': 'Solanum tuberosum (Healthy)',
+        'description': 'Healthy potato foliage with no disease symptoms.',
+        'symptoms': ['Uniform green canopy', 'Healthy leaf texture'],
+        'causes': ['Good nutrition', 'Optimal irrigation'],
+        'severity': 'None',
+        'treatments': [],
+        'recommendations': ['Continue standard field management'],
+        'sources': []
+    },
+
+    5: {
+        'name': 'Bacterial Spot (Tomato)',
+        'scientific_name': 'Xanthomonas vesicatoria / X. euvesicatoria',
+        'description': 'Bacterial disease producing dark lesions with yellow halos on tomato leaves and fruits; reported from multiple Indian states.',
+        'symptoms': ['Black leaf and fruit spots', 'Yellow halos around lesions', 'Fruit cracking or scabby lesions'],
+        'causes': ['Xanthomonas spp., seed- and splash-borne', 'Warm wet weather, overhead irrigation, contaminated tools/seed'],
+        'severity': 'High',
         'treatments': [
-            {
-                'type': 'Chemical',
-                'name': 'NPK fertilizer',
-                'description': 'Apply NPK 19:19:19 (10g per plant) as top dressing',
-                'dosage': '10g per plant',
-                'frequency': 'Every 15 days'
-            },
-            {
-                'type': 'Foliar',
-                'name': 'Urea spray',
-                'description': 'Foliar spray of 2% Urea solution for quick recovery',
-                'dosage': '20g per liter',
-                'frequency': 'Every 10 days (2-3 sprays)'
-            },
-            {
-                'type': 'Organic',
-                'name': 'Vermicompost',
-                'description': 'Apply well-decomposed vermicompost (2-3 kg per plant)',
-                'dosage': '2-3 kg per plant',
-                'frequency': 'Once a month'
-            },
-            {
-                'type': 'Micronutrients',
-                'name': 'Micronutrient mixture',
-                'description': 'Spray micronutrient mixture (Zn, Fe, Mn, B) at 2g/liter',
-                'dosage': '2g per liter',
-                'frequency': 'Every 20 days'
-            }
+            {'type': 'Chemical', 'name': 'Copper-based bactericides',
+             'description': 'Copper sprays are primary chemical control; apply preventatively and rotate with other IPM measures.',
+             'dosage': 'Per label (typical copper oxychloride rates)',
+             'frequency': 'Every 7–10 days in epidemic periods'},
+            {'type': 'Cultural', 'name': 'Seed health & sanitation',
+             'description': 'Use certified seed, treat seed where appropriate, remove infected plants and debris.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
         ],
         'recommendations': [
-            'Apply nitrogen-rich fertilizer immediately (Urea @ 50kg/acre)',
-            'Correct soil pH to 6.0-7.0 using lime if needed',
-            'Improve soil drainage to prevent leaching',
-            'Add organic matter (FYM/compost 10-15 tons/ha)',
-            'Apply foliar spray of 19:19:19 + micronutrients',
-            'Conduct soil test to identify specific deficiencies',
-            'Mulch with organic materials',
-            'Ensure adequate irrigation (not excessive)'
+            'Adopt certified disease-free seed and seed treatments',
+            'Avoid overhead irrigation; improve field sanitation',
+            'Rotate crops and practice tool hygiene'
+        ],
+        'sources': [
+            ':contentReference[oaicite:6]{index=6}',  # Review on bacterial spot in Himachal Pradesh (India)
+            ':contentReference[oaicite:7]{index=7}'    # Prevalence study in Karnataka
         ]
     },
-    5: {
-        'name': 'White Spot',
-        'scientific_name': 'Powdery Mildew (Leveillula taurica)',
-        'description': 'Fungal disease causing white powdery coating on leaves and stems',
-        'symptoms': ['White/gray powdery coating', 'Primarily on upper leaf surface', 'Leaf distortion and curling', 'Yellowing and premature drop', 'Reduced photosynthesis'],
-        'causes': ['Leveillula fungus', 'Moderate humidity (40-70%)', 'Temperature 15-27°C', 'Dense canopy', 'Poor air circulation'],
-        'severity': 'Medium',
+
+    6: {
+        'name': 'Early Blight (Tomato)',
+        'scientific_name': 'Alternaria solani',
+        'description': 'Early blight on tomato produces concentric-ring lesions and can defoliate plants under favourable conditions; widely reported in India.',
+        'symptoms': ['Brown rings on leaves, yellowing around spots, progressive defoliation'],
+        'causes': ['Alternaria solani spores, warm humid weather, prolonged leaf wetness, poor nutrition'],
+        'severity': 'High',
         'treatments': [
-            {
-                'type': 'Fungicide',
-                'name': 'Sulfur powder',
-                'description': 'Dust or spray 80% Sulfur WP (3g/liter) every 7-10 days',
-                'dosage': '3g per liter',
-                'frequency': 'Every 7-10 days'
-            },
-            {
-                'type': 'Fungicide',
-                'name': 'Hexaconazole',
-                'description': 'Spray Hexaconazole 5% EC (2ml/liter) for severe infections',
-                'dosage': '2ml per liter',
-                'frequency': 'Every 10-12 days'
-            },
-            {
-                'type': 'Organic',
-                'name': 'Milk spray',
-                'description': 'Spray diluted milk (1:10 milk:water) as organic treatment',
-                'dosage': '100ml milk in 1 liter water',
-                'frequency': 'Every 7 days'
-            },
-            {
-                'type': 'Fungicide',
-                'name': 'Tebuconazole',
-                'description': 'Spray Tebuconazole 25% WG (0.5ml/liter)',
-                'dosage': '0.5ml per liter',
-                'frequency': 'Every 10 days'
-            }
+            {'type': 'Fungicide', 'name': 'Mancozeb / Chlorothalonil',
+             'description': 'Protectant sprays commonly used in Indian tomato production.',
+             'dosage': '~2 g/L (follow product label)',
+             'frequency': 'Every 7–14 days depending on disease pressure'},
+            {'type': 'Cultural', 'name': 'Varietal selection & hygiene',
+             'description': 'Use moderately resistant varieties if available, remove infected residues and maintain nutrition.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
         ],
         'recommendations': [
-            'Improve air circulation by proper spacing and pruning',
-            'Reduce relative humidity through ventilation',
-            'Apply sulfur dust preventively during cool weather',
-            'Remove heavily infected leaves',
-            'Avoid excessive nitrogen fertilization',
-            'Water early morning (avoid evening watering)',
-            'Apply fungicide at first sign of disease',
-            'Maintain optimal temperature (25-30°C)'
+            'Implement drip irrigation and avoid splash',
+            'Timely removal of infected leaves and crop residues',
+            'Balanced N fertilization and timely fungicide rotations'
+        ],
+        'sources': [
+            ':contentReference[oaicite:8]{index=8}',  # Early blight control studies
+            ':contentReference[oaicite:9]{index=9}'   # Indian fungicide evaluation
         ]
+    },
+
+    7: {
+        'name': 'Late Blight (Tomato/Potato)',
+        'scientific_name': 'Phytophthora infestans',
+        'description': 'Rapid, destructive disease of potato and tomato reported across India; causes water-soaked lesions and sporulation under humid conditions.',
+        'symptoms': ['Water-soaked lesions, white sporulation on undersides, rapid leaf collapse'],
+        'causes': ['P. infestans sporangia/zoospores spread by wind/rain; cool humid conditions; infected tubers/volunteers'],
+        'severity': 'Critical',
+        'treatments': [
+            {'type': 'Oomycide', 'name': 'Metalaxyl + Mancozeb / other oomycides',
+             'description': 'Use effective oomycide mixtures and apply protectively based on weather forecasts.',
+             'dosage': 'Per label',
+             'frequency': '7–10 days under epidemic risk'},
+            {'type': 'Cultural', 'name': 'Use certified seed & destroy infected plants',
+             'description': 'Reduce inoculum sources and practice good crop hygiene.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
+        ],
+        'recommendations': [
+            'Monitor weather; time sprays before wet, cool conditions',
+            'Use certified seed tubers and remove volunteers',
+            'Improve drainage and avoid waterlogging'
+        ],
+        'sources': [
+            ':contentReference[oaicite:10]{index=10}',  # Recent outbreak/studies on late blight
+            ':contentReference[oaicite:11]{index=11}'    # Late blight global review with India mentions
+        ]
+    },
+
+    8: {
+        'name': 'Leaf Mold (Tomato)',
+        'scientific_name': 'Passalora fulva (syn. Cladosporium fulvum / Fulvia fulva)',
+        'description': 'Leaf mold of tomato attacking foliage (often in humid tunnels/greenhouses) producing yellow patches above and olive-green fuzzy mold beneath.',
+        'symptoms': ['Yellow patches on upper leaf surface', 'Olive-green fuzzy mould on leaf undersides', 'Reduced photosynthetic area'],
+        'causes': ['Passalora fulva infection favored by high humidity and poor ventilation'],
+        'severity': 'Medium',
+        'treatments': [
+            {'type': 'Fungicide', 'name': 'Copper or sulfur sprays / registered fungicides',
+             'description': 'Apply as per local label and integrate with cultural controls.',
+             'dosage': 'Per label (typical: 2 g/L for some formulations)',
+             'frequency': 'Every 7–10 days when disease pressure exists'},
+            {'type': 'Cultural', 'name': 'Ventilation & humidity control',
+             'description': 'Improve greenhouse/tunnel ventilation, reduce leaf wetness and remove heavily infected leaves.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
+        ],
+        'recommendations': [
+            'Increase ventilation in protected cultivation',
+            'Avoid prolonged leaf wetness and over-fertilization',
+            'Sanitize greenhouse structures and use disease-free transplants'
+        ],
+        'sources': [
+            ':contentReference[oaicite:12]{index=12}',  # ISHS / distribution notes including India
+            ':contentReference[oaicite:13]{index=13}'   # Identification study including Indian contexts
+        ]
+    },
+
+    9: {
+        'name': 'Septoria Leaf Spot',
+        'scientific_name': 'Septoria lycopersici',
+        'description': 'Fungal leaf spot of tomato producing small dark spots and chlorotic margins; can cause severe defoliation in Indian conditions with prolonged leaf wetness.',
+        'symptoms': ['Small dark circular spots on leaves', 'Yellow/chlorotic edges', 'Progressive defoliation under conducive weather'],
+        'causes': ['Septoria lycopersici spores, rain-splash dispersal, prolonged leaf wetness'],
+        'severity': 'High',
+        'treatments': [
+            {'type': 'Fungicide', 'name': 'Chlorothalonil / Mancozeb / hexaconazole (where registered)',
+             'description': 'Protectant fungicides have been effective in Indian field trials; follow label instructions.',
+             'dosage': 'Per label',
+             'frequency': 'Every 7–10 days during epidemic periods'},
+            {'type': 'Cultural', 'name': 'Leaf removal & reduced splash',
+             'description': 'Stake plants, improve spacing, remove infected debris to reduce inoculum.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
+        ],
+        'recommendations': [
+            'Avoid overhead watering; stake and prune to reduce humidity',
+            'Apply protectant fungicides based on disease forecasts and follow IPM principles',
+            'Practice crop rotation and remove crop residues'
+        ],
+        'sources': [
+            ':contentReference[oaicite:14]{index=14}',  # Indian IJCMAS/field reports on Septoria (India)
+            ':contentReference[oaicite:15]{index=15}'   # ICAR guidance on cultural management (India)
+        ]
+    },
+
+    10: {
+        'name': 'Spider Mite Infestation',
+        'scientific_name': 'Tetranychus urticae',
+        'description': 'Acarine pest (two-spotted spider mite) causing stippling, bronzing and webbing on leaves; important in hot, dry Indian seasons and in protected cultivation.',
+        'symptoms': ['Yellow stippling on leaves', 'Fine webbing on leaf undersides', 'Leaf bronzing and premature leaf drop'],
+        'causes': ['High temperature and low humidity favor population explosions; lack of natural enemies and indiscriminate acaricide use'],
+        'severity': 'Medium',
+        'treatments': [
+            {'type': 'Miticide', 'name': 'Abamectin / propargite / dicofol (registered options vary)',
+             'description': 'Use selective acaricides according to label and resistance management guidelines.',
+             'dosage': 'Per label (e.g., abamectin ~0.5 ml/L as commonly reported in trials)',
+             'frequency': 'As per label and monitoring thresholds'},
+            {'type': 'Biological', 'name': 'Predatory mites & biopesticides',
+             'description': 'Conserve/augment predators (Phytoseiidae) and use plant-extracts/biopesticides in IPM.',
+             'dosage': 'Per product guidance',
+             'frequency': 'As required'}
+        ],
+        'recommendations': [
+            'Monitor regularly; use action thresholds before spraying',
+            'Encourage predatory mites and avoid broad-spectrum insecticides that kill beneficials',
+            'Use cultural measures (leaf washing, maintain humidity) in protected cultivation'
+        ],
+        'sources': [
+            ':contentReference[oaicite:16]{index=16}',  # Indian study on management of two-spotted spider mite
+            ':contentReference[oaicite:17]{index=17}'   # Eco-friendly management publications (India)
+        ]
+    },
+
+    11: {
+        'name': 'Target Spot',
+        'scientific_name': 'Corynespora cassiicola',
+        'description': 'Fungal disease producing large target-like leaf lesions on tomato and other crops; emerging pathogen in parts of India.',
+        'symptoms': ['Target-like concentric lesions which can coalesce into large necrotic areas', 'Leaf blotching and defoliation in severe cases'],
+        'causes': ['Corynespora cassiicola infection favored by high humidity and warm temperatures', 'Can infect multiple hosts and survive in residues'],
+        'severity': 'Medium',
+        'treatments': [
+            {'type': 'Fungicide', 'name': 'Mancozeb / registered fungicides',
+             'description': 'Protectant fungicides reduce sporulation and lesion spread; integrate with cultural management.',
+             'dosage': 'Per label',
+             'frequency': 'Weekly to 10-day intervals under pressure'},
+            {'type': 'Cultural', 'name': 'Sanitation & crop rotation',
+             'description': 'Remove infected residues and rotate to non-hosts to reduce inoculum.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
+        ],
+        'recommendations': [
+            'Improve airflow and avoid prolonged leaf wetness',
+            'Remove infected leaves and residues promptly',
+            'Monitor fields for new/emerging outbreaks'
+        ],
+        'sources': [
+            ':contentReference[oaicite:18]{index=18}',  # Target spot reports and Indian emergence notes
+            ':contentReference[oaicite:19]{index=19}'   # Reports of Corynespora in Indian contexts
+        ]
+    },
+
+    12: {
+        'name': 'Leaf Curl Virus (Tomato Yellow Leaf Curl / TYLCV)',
+        'scientific_name': 'Begomovirus (TYLCV and related begomoviruses)',
+        'description': 'Viral disease transmitted by whitefly (Bemisia tabaci) causing leaf curling, yellowing, stunting and severe yield loss in India.',
+        'symptoms': ['Leaf curling and distortion', 'Interveinal yellowing, stunting and reduced fruit set', 'Severe cases cause near-total yield loss'],
+        'causes': ['Begomoviruses (TYLCV/ToLCNDV and related strains) vectored by whitefly', 'High vector populations and mixed infections increase impact'],
+        'severity': 'Critical',
+        'treatments': [
+            {'type': 'Insecticide', 'name': 'Imidacloprid / systemic whitefly management',
+             'description': 'Vector control lowers virus spread; integrate chemical control with cultural and biological measures.',
+             'dosage': 'Per label (example: 0.5 ml/L is commonly cited in regional recommendations)',
+             'frequency': 'Follow IPM and label directions'},
+            {'type': 'Cultural', 'name': 'Resistant varieties & rogueing',
+             'description': 'Use resistant/tolerant varieties where available; remove infected plants to reduce sources.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
+        ],
+        'recommendations': [
+            'Use yellow sticky traps and manage whitefly populations',
+            'Plant virus-resistant/tolerant varieties and practice rogueing of infected plants',
+            'Implement crop-free windows and remove alternate weed hosts'
+        ],
+        'sources': [
+            ':contentReference[oaicite:20]{index=20}',  # Review on tomato leaf curl disease in India
+            ':contentReference[oaicite:21]{index=21}'  # TYLCV management and breeding review (India)
+        ]
+    },
+
+    13: {
+        'name': 'Mosaic Virus',
+        'scientific_name': 'Tobamovirus / Tobravirus / Cucumovirus groups (e.g., TMV, ToMV, CMV depending on host)',
+        'description': 'Group of viral diseases causing mottling, mosaic patterns, leaf distortion and yield loss; several mosaic viruses (CMV, TMV, ToMV, ToBRFV) have been reported in India.',
+        'symptoms': ['Mottling and mosaic patterns on leaves', 'Leaf distortion, chlorosis, reduced vigor and yield', 'Host-specific additional signs (fruit malformation)'],
+        'causes': ['Mechanical or seed transmission (tobamoviruses) and vector transmission for others (e.g., CMV via aphids)',
+                 'Contaminated transplants, tools and seedlots'],
+        'severity': 'High (depending on virus and cultivar)',
+        'treatments': [
+            {'type': 'Cultural', 'name': 'Use certified seed & sanitation',
+             'description': 'Virus management relies on healthy seed, sanitation, removal of infected plants and tool disinfection.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'},
+            {'type': 'Breeding', 'name': 'Resistant varieties',
+             'description': 'Deploy resistant/tolerant cultivars where available; seed certification programs reduce spread.',
+             'dosage': 'N/A',
+             'frequency': 'Ongoing'}
+        ],
+        'recommendations': [
+            'Implement strict seed/transplant hygiene and disinfect tools regularly',
+            'Control mechanical spread and insect vectors (where applicable)',
+            'Monitor and rogue infected plants early'
+        ],
+        'sources': [
+            ':contentReference[oaicite:22]{index=22}',  # MDPI report: ToMMV first reports in India (tobamovirus)
+            ':contentReference[oaicite:23]{index=23}'  # Indian Express coverage re: CMV/ToMV impacts in Maharashtra/Karnataka
+        ]
+    },
+
+    14: {
+        'name': 'Tomato Healthy',
+        'scientific_name': 'Solanum lycopersicum (Healthy)',
+        'description': 'Healthy tomato leaf with no disease or stress.',
+        'symptoms': ['Uniform green leaf', 'Normal growth'],
+        'causes': ['Good nutrition', 'No pathogen presence'],
+        'severity': 'None',
+        'treatments': [],
+        'recommendations': ['Maintain balanced crop care and monitor regularly'],
+        'sources': []
     }
 }
 

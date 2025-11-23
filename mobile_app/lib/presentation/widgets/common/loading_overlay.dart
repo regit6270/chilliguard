@@ -7,13 +7,14 @@ class LoadingOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(),
+          CircularProgressIndicator(valueColor: AlwaysStoppedAnimation(scheme.primary)),
           const SizedBox(height: 16),
-          Text(message, style: const TextStyle(fontSize: 16)),
+          Text(message, style: Theme.of(context).textTheme.bodyLarge),
         ],
       ),
     );

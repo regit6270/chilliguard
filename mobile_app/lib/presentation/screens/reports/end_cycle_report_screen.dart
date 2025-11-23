@@ -1,3 +1,4 @@
+// end_cycle_report_screen.dart
 import 'package:chilliguard/l10n/app_localizations.dart'; // ignore: unused_import
 import 'package:flutter/material.dart';
 
@@ -31,228 +32,355 @@ class EndCycleReportScreen extends StatelessWidget {
       'roi': 177.8,
     };
 
+    // space reserved at bottom so FAB doesn't overlap content
+    const double bottomFabPadding = 110;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(isHindi ? 'फसल चक्र रिपोर्ट' : 'End Cycle Report'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: () {
-              // TODO: Share report
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.download),
-            onPressed: () {
-              // TODO: Download PDF
-            },
-          ),
-        ],
+        centerTitle: false,
+        elevation: 0,
+        
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header Card
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      report['batchName'] as String,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(right: 8.0),
+        child: FloatingActionButton.extended(
+          onPressed: () {},
+          icon: const Icon(Icons.picture_as_pdf),
+          label: Text(isHindi ? 'PDF डाउनलोड' : 'Download PDF'),
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
+      body: SafeArea(
+        child: LayoutBuilder(builder: (context, constraints) {
+          final isWide = constraints.maxWidth > 600;
+          return SingleChildScrollView(
+            padding:
+                EdgeInsets.fromLTRB(16, 12, 16, bottomFabPadding), // reserve space for FAB
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // HEADER CARD
+                Card(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 14.0, vertical: 16.0),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Accent bar
+                        Container(
+                          width: 8,
+                          height: 72,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            gradient: LinearGradient(colors: [
+                              Theme.of(context).colorScheme.primary
+                                  .withOpacity(0.95),
+                              Theme.of(context).colorScheme.primary
+                                  .withOpacity(0.6),
+                            ], begin: Alignment.topCenter, end: Alignment.bottomCenter),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+
+                        // Title + meta — flexible to avoid overflow
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Title (can wrap to 2 lines)
+                              Text(
+                                report['batchName'] as String,
+                                style: const TextStyle(
+                                    fontSize: 20, fontWeight: FontWeight.w800),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              const SizedBox(height: 8),
+
+                              // metadata chips - use Wrap so they flow on narrow widths
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  _infoChip(
+                                    context,
+                                    icon: Icons.location_on,
+                                    label: report['fieldName'] as String,
+                                  ),
+                                  _infoChip(
+                                    context,
+                                    icon: Icons.calendar_today,
+                                    label:
+                                        '${report['startDate']} • ${report['endDate']}',
+                                  ),
+                                  _infoChip(
+                                    context,
+                                    icon: Icons.timer,
+                                    label:
+                                        '${report['duration']} ${isHindi ? 'दिन' : 'days'}',
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Right-side small icon to indicate health metric or any other action
+                        const SizedBox(width: 12),
+                        SizedBox(
+                          width: 36,
+                          child: Center(
+                            child: Icon(Icons.timer, color: Colors.grey[600]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+
+                // METRICS — use Wrap so tiles never force horizontal overflow
+               LayoutBuilder(
+  builder: (context, constraints) {
+    final double tileWidth = (constraints.maxWidth - 12) / 2;
+
+    return Wrap(
+      spacing: 12,
+      runSpacing: 12,
+      children: [
+        SizedBox(
+          width: tileWidth,
+          child: _metricTileCompact(
+            icon: Icons.agriculture,
+            title: isHindi ? 'कुल उपज' : 'Total Yield',
+            value: '${report['totalYield']} t',
+            color: Colors.green,
+          ),
+        ),
+        SizedBox(
+          width: tileWidth,
+          child: _metricTileCompact(
+            icon: Icons.show_chart,
+            title: isHindi ? 'प्रति हेक्टेयर' : 'Per Hectare',
+            value: '${report['yieldPerHectare']} t/ha',
+            color: Colors.blue,
+          ),
+        ),
+        SizedBox(
+          width: tileWidth,
+          child: _metricTileCompact(
+            icon: Icons.bug_report,
+            title: isHindi ? 'रोग घटनाएं' : 'Disease Incidents',
+            value: '${report['diseaseIncidents']}',
+            color: Colors.red,
+          ),
+        ),
+        SizedBox(
+          width: tileWidth,
+          child: _metricTileCompact(
+            icon: Icons.pest_control,
+            title: isHindi ? 'कीट घटनाएं' : 'Pest Incidents',
+            value: '${report['pestIncidents']}',
+            color: Colors.orange,
+          ),
+        ),
+      ],
+    );
+  },
+),
+                const SizedBox(height: 20),
+
+                // FINANCIAL SUMMARY
+                Card(
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                  elevation: 1,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 12.0, horizontal: 16.0),
+                    child: Column(
+                      children: [
+                        _financialRow(
+                          context,
+                          label: isHindi ? 'कुल लागत' : 'Total Cost',
+                          value: '₹${_formatNumber(report['totalCost'] as int)}',
+                          color: Colors.red,
+                        ),
+                        Divider(height: 24, color: Colors.grey.shade200),
+                        _financialRow(
+                          context,
+                          label: isHindi ? 'राजस्व' : 'Revenue',
+                          value: '₹${_formatNumber(report['revenue'] as int)}',
+                          color: Colors.blue,
+                        ),
+                        Divider(height: 24, color: Colors.grey.shade200),
+                        _financialRow(
+                          context,
+                          label: isHindi ? 'लाभ' : 'Profit',
+                          value: '₹${_formatNumber(report['profit'] as int)}',
+                          color: Colors.green,
+                          isBold: true,
+                        ),
+                        Divider(height: 24, color: Colors.grey.shade200),
+                        _financialRow(
+                          context,
+                          label: isHindi ? 'ROI' : 'ROI',
+                          value: '${report['roi']}%',
+                          color: Colors.purple,
+                          isBold: true,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 28),
+
+                // ACTIONS — adapt layout to width
+                if (isWide)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.print_outlined),
+                          label: Text(isHindi ? 'प्रिंट करें' : 'Print'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            foregroundColor: Colors.green.shade800,
+                            side: BorderSide(color: Colors.green.shade800, width: 1.6),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(Icons.location_on,
-                            size: 16, color: Colors.grey[600]),
-                        const SizedBox(width: 4),
-                        Text(
-                          report['fieldName'] as String,
-                          style: TextStyle(color: Colors.grey[600]),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: () {},
+                          icon: const Icon(Icons.share_outlined),
+                          label: Text(isHindi ? 'साझा करें' : 'Share'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: Colors.green.shade700,
+                          ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        _buildInfoChip(
-                          icon: Icons.calendar_today,
-                          label:
-                              '${report['startDate']} to ${report['endDate']}',
+                      ),
+                    ],
+                  )
+                else
+                  // vertically stacked for narrow screens
+                  Column(
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.print_outlined),
+                        label: Text(isHindi ? 'प्रिंट करें' : 'Print'),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          foregroundColor: Colors.green.shade800,
+                          side: BorderSide(color: Colors.green.shade800, width: 1.6),
+                          minimumSize: const Size.fromHeight(48),
                         ),
-                        const SizedBox(width: 8),
-                        _buildInfoChip(
-                          icon: Icons.timer,
-                          label:
-                              '${report['duration']} ${isHindi ? 'दिन' : 'days'}',
+                      ),
+                      const SizedBox(height: 12),
+                      ElevatedButton.icon(
+                        onPressed: () {},
+                        icon: const Icon(Icons.share_outlined),
+                        label: Text(isHindi ? 'साझा करें' : 'Share'),
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          backgroundColor: Colors.green.shade700,
+                          minimumSize: const Size.fromHeight(48),
                         ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 20),
-
-            // Yield Section
-            _buildSectionHeader(isHindi ? 'उपज सारांश' : 'Yield Summary'),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    context,
-                    icon: Icons.agriculture,
-                    value: '${report['totalYield']} t',
-                    label: isHindi ? 'कुल उपज' : 'Total Yield',
-                    color: Colors.green,
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildMetricCard(
-                    context,
-                    icon: Icons.show_chart,
-                    value: '${report['yieldPerHectare']} t/ha',
-                    label: isHindi ? 'प्रति हेक्टेयर' : 'Per Hectare',
-                    color: Colors.blue,
-                  ),
-                ),
+
+                const SizedBox(height: 28),
               ],
             ),
+          );
+        }),
+      ),
+    );
+  }
 
-            const SizedBox(height: 20),
-
-            // Health Summary
-            _buildSectionHeader(
-                isHindi ? 'स्वास्थ्य सारांश' : 'Health Summary'),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildMetricCard(
-                    context,
-                    icon: Icons.bug_report,
-                    value: '${report['diseaseIncidents']}',
-                    label: isHindi ? 'रोग घटनाएं' : 'Disease Incidents',
-                    color: Colors.red,
+  // compact metric tile — consistent width, flows with Wrap
+  Widget _metricTileCompact({
+    required IconData icon,
+    required String title,
+    required String value,
+    required Color color,
+  }) {
+    return SizedBox(
+      width:  (160), // small fixed width so wrap works predictably
+      child: Card(
+        elevation: 0,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.12),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.all(8),
+                    child: Icon(icon, size: 18, color: color),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildMetricCard(
-                    context,
-                    icon: Icons.pest_control,
-                    value: '${report['pestIncidents']}',
-                    label: isHindi ? 'कीट घटनाएं' : 'Pest Incidents',
-                    color: Colors.orange,
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: const TextStyle(fontSize: 12, color: Colors.black87),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 20),
-
-            // Financial Summary
-            _buildSectionHeader(
-                isHindi ? 'वित्तीय सारांश' : 'Financial Summary'),
-            const SizedBox(height: 12),
-            Card(
-              elevation: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildFinancialRow(
-                      isHindi ? 'कुल लागत' : 'Total Cost',
-                      '₹${_formatNumber(report['totalCost'] as int)}',
-                      Colors.red,
-                    ),
-                    const Divider(height: 24),
-                    _buildFinancialRow(
-                      isHindi ? 'राजस्व' : 'Revenue',
-                      '₹${_formatNumber(report['revenue'] as int)}',
-                      Colors.blue,
-                    ),
-                    const Divider(height: 24),
-                    _buildFinancialRow(
-                      isHindi ? 'लाभ' : 'Profit',
-                      '₹${_formatNumber(report['profit'] as int)}',
-                      Colors.green,
-                      isBold: true,
-                    ),
-                    const Divider(height: 24),
-                    _buildFinancialRow(
-                      isHindi ? 'ROI' : 'ROI',
-                      '${report['roi']}%',
-                      Colors.purple,
-                      isBold: true,
-                    ),
-                  ],
-                ),
+                ],
               ),
-            ),
-
-            const SizedBox(height: 30),
-
-            // Export Button
-            SizedBox(
-              width: double.infinity,
-              height: 50,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // TODO: Export as PDF
-                },
-                icon: const Icon(Icons.picture_as_pdf),
-                label: Text(
-                  isHindi ? 'PDF डाउनलोड करें' : 'Download PDF',
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ),
-            ),
-          ],
+              const SizedBox(height: 10),
+              Text(value,
+                  style: TextStyle(
+                      fontSize: 14, fontWeight: FontWeight.bold, color: color)),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildSectionHeader(String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-      ),
-    );
-  }
-
-  Widget _buildInfoChip({required IconData icon, required String label}) {
+  Widget _infoChip(BuildContext context,
+      {required IconData icon, required String label}) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.grey[100],
+        color: Colors.grey.shade50,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade100),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: Colors.grey[700]),
+          Icon(icon, size: 12, color: Colors.grey[700]),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.grey[700],
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: 200),
+            child: Text(
+              label,
+              style: TextStyle(fontSize: 12, color: Colors.grey[700]),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -260,72 +388,35 @@ class EndCycleReportScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildMetricCard(
-    BuildContext context, {
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    return Card(
-      elevation: 2,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, size: 32, color: color),
-            const SizedBox(height: 8),
-            Text(
-              value,
+  Widget _financialRow(BuildContext context,
+      {required String label,
+      required String value,
+      required Color color,
+      bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label,
+                style: TextStyle(
+                    fontSize: isBold ? 16 : 14,
+                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal)),
+          ),
+          Text(value,
               style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+                  fontSize: isBold ? 16 : 14,
+                  fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
+                  color: color)),
+        ],
       ),
-    );
-  }
-
-  Widget _buildFinancialRow(String label, String value, Color color,
-      {bool isBold = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: isBold ? 16 : 14,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: isBold ? 18 : 16,
-            fontWeight: isBold ? FontWeight.bold : FontWeight.w600,
-            color: color,
-          ),
-        ),
-      ],
     );
   }
 
   String _formatNumber(int number) {
     return number.toString().replaceAllMapped(
-          RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-          (Match m) => '${m[1]},',
-        );
+      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
+      (Match m) => '${m[1]},',
+    );
   }
 }

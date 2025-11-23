@@ -17,11 +17,11 @@ CropBatchModel _$CropBatchModelFromJson(Map<String, dynamic> json) =>
           CropBatchModel._dateFromJsonNullable(json['estimated_harvest_date']),
       actualHarvestDate:
           CropBatchModel._dateFromJsonNullable(json['actual_harvest_date']),
-      area: (json['area'] as num).toDouble(),
+      area: CropBatchModel._doubleFromJson(json['area']),
       seedVariety: json['seed_variety'] as String?,
       status: json['status'] as String,
-      healthScore: (json['health_score'] as num).toDouble(),
-      createdAt: CropBatchModel._dateFromJson(json['created_at']),
+      healthScore: CropBatchModel._healthScoreFromJson(json['health_score']),
+      createdAt: CropBatchModel._dateFromJsonWithDefault(json['created_at']),
     );
 
 Map<String, dynamic> _$CropBatchModelToJson(CropBatchModel instance) =>

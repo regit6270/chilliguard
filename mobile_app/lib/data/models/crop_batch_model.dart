@@ -33,6 +33,7 @@ class CropBatchModel {
       toJson: _dateToJsonNullable)
   final DateTime? actualHarvestDate;
 
+  @JsonKey(name: 'area', fromJson: _doubleFromJson)
   final double area;
 
   @JsonKey(name: 'seed_variety')
@@ -40,10 +41,10 @@ class CropBatchModel {
 
   final String status;
 
-  @JsonKey(name: 'health_score')
+  @JsonKey(name: 'health_score', fromJson: _healthScoreFromJson)
   final double healthScore;
 
-  @JsonKey(name: 'created_at', fromJson: _dateFromJson, toJson: _dateToJson)
+  @JsonKey(name: 'created_at', fromJson: _dateFromJsonWithDefault, toJson: _dateToJson)
   final DateTime createdAt;
 
   const CropBatchModel({
@@ -114,9 +115,35 @@ class CropBatchModel {
     return _dateFromJson(json);
   }
 
+  // Helper to ensure createdAt is never null
+  static DateTime _dateFromJsonWithDefault(dynamic json) {
+    if (json == null) return DateTime.now();
+    return _dateFromJson(json);
+  }
+
   static String _dateToJson(DateTime date) => date.toIso8601String();
 
   static String? _dateToJsonNullable(DateTime? date) {
     return date?.toIso8601String();
+  }
+
+  static double _doubleFromJson(dynamic json) {
+    if (json == null) return 0.0;
+    if (json is num) return json.toDouble();
+    if (json is String) {
+      final parsed = double.tryParse(json);
+      return parsed ?? 0.0;
+    }
+    return 0.0;
+  }
+
+  static double _healthScoreFromJson(dynamic json) {
+    if (json == null) return 100.0; // Default health score
+    if (json is num) return json.toDouble();
+    if (json is String) {
+      final parsed = double.tryParse(json);
+      return parsed ?? 100.0;
+    }
+    return 100.0;
   }
 }

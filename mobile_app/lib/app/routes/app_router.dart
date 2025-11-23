@@ -128,6 +128,11 @@ class AppRouter {
         builder: (context, state) => const BatchListScreen(),
       ),
       GoRoute(
+        path: '/crop-management',
+        name: 'crop-management',
+        builder: (context, state) => const BatchListScreen(),
+      ),
+      GoRoute(
         path: '/batch/:id',
         name: 'batch-detail',
         builder: (context, state) {
@@ -136,8 +141,21 @@ class AppRouter {
         },
       ),
       GoRoute(
+        path: '/crop-management/batch/:id',
+        name: 'crop-management-batch-detail',
+        builder: (context, state) {
+          final batchId = state.pathParameters['id']!;
+          return BatchDetailScreen(batchId: batchId);
+        },
+      ),
+      GoRoute(
         path: '/create-batch',
         name: 'create-batch',
+        builder: (context, state) => const CreateBatchScreen(),
+      ),
+      GoRoute(
+        path: '/crop-management/new',
+        name: 'crop-management-new',
         builder: (context, state) => const CreateBatchScreen(),
       ),
 

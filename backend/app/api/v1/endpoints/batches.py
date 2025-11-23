@@ -23,21 +23,70 @@ def get_batches() -> Tuple[Response, int]:
     try:
         user_id = get_user_id()
         field_id = request.args.get('field_id')
-        status = request.args.get('status')  # active, harvested, failed
+        status = request.args.get('status')  # active, completed, all
+
+        logger.info(f'Fetching batches for user_id={user_id}, field_id={field_id}, status={status}')
 
         # Build filters
         filters: List[Tuple[str, Any, Any]] = [('user_id', '==', user_id)]
         if field_id:
             filters.append(('field_id', '==', field_id))
         if status:
-            filters.append(('status', '==', status))
+            # Map filter status to backend status values
+            # "active" -> matches "active" or "growing"
+            # "completed" -> matches "harvested" or "failed" or "completed"
+            if status == 'active':
+                # For active, we'll filter in Python to match both "active" and "growing"
+                pass  # Don't filter by status here, filter in Python
+            elif status == 'completed':
+                # For completed, match harvested, failed, or completed
+                pass  # Don't filter by status here, filter in Python
+            else:
+                # For other statuses, use exact match
+                filters.append(('status', '==', status))
 
-        # Query batches
-        batches = db.query_collection(
+        # Query batches WITHOUT order_by to avoid index requirement
+        # Sort in Python instead
+        batches = db.query_collection_no_order(
             'crop_batches',
             filters=filters,
-            order_by=[('planting_date', 'DESCENDING')]
+            limit=100
         )
+
+        logger.info(f'Found {len(batches)} batches before filtering and sorting')
+
+        # Filter by status if needed (handle status mapping - case insensitive)
+        if status:
+            if status.lower() == 'active':
+                # Match "active" or "growing" status (case insensitive)
+                batches = [b for b in batches if b.get('status', '').lower() in ['active', 'growing']]
+                logger.info(f'After active filter: {len(batches)} batches (matching active/growing)')
+            elif status.lower() == 'completed':
+                # Match "harvested", "failed", or "completed" status (case insensitive)
+                batches = [b for b in batches if b.get('status', '').lower() in ['harvested', 'failed', 'completed']]
+                logger.info(f'After completed filter: {len(batches)} batches (matching harvested/failed/completed)')
+            else:
+                # For other statuses, use case-insensitive exact match
+                batches = [b for b in batches if b.get('status', '').lower() == status.lower()]
+                logger.info(f'After status filter ({status}): {len(batches)} batches')
+
+        # Sort by planting_date in Python (handle both string and date types)
+        def get_planting_date(batch):
+            planting_date = batch.get('planting_date')
+            if isinstance(planting_date, str):
+                try:
+                    from dateutil import parser
+                    return parser.parse(planting_date)
+                except Exception:
+                    return datetime.min
+            elif isinstance(planting_date, datetime):
+                return planting_date
+            else:
+                return datetime.min
+
+        batches.sort(key=get_planting_date, reverse=True)
+
+        logger.info(f'Returning {len(batches)} batches sorted by planting_date')
 
         return jsonify({
             'batches': batches,
@@ -45,8 +94,8 @@ def get_batches() -> Tuple[Response, int]:
         }), 200
 
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f'Error getting batches: {str(e)}')
-        return jsonify({'error': 'Failed to fetch batches'}), 500
+        logger.error(f'Error getting batches: {str(e)}', exc_info=True)
+        return jsonify({'error': f'Failed to fetch batches: {str(e)}'}), 500
 
 
 @bp.route('/<batch_id>', methods=['GET'])
@@ -100,19 +149,28 @@ def create_batch() -> Tuple[Response, int]:
         user_id = get_user_id()
         data: Dict[str, Any] = request.get_json(silent=True) or {}
 
+        logger.info(f'Creating batch for user_id={user_id}, data={data}')
+
         # Validate required fields
         required = ['field_id', 'crop_type', 'planting_date', 'area']
-        if not all(field in data for field in required):
-            return jsonify({'error': 'Missing required fields'}), 400
+        missing = [field for field in required if field not in data]
+        if missing:
+            logger.warning(f'Missing required fields: {missing}')
+            return jsonify({'error': f'Missing required fields: {", ".join(missing)}'}), 400
 
         # Verify field ownership
         field = db.get_document('fields', data['field_id'])
-        if not field or field.get('user_id') != user_id:
+        if not field:
+            logger.warning(f'Field not found: {data["field_id"]}')
+            return jsonify({'error': 'Field not found'}), 400
+        if field.get('user_id') != user_id:
+            logger.warning(f'Field ownership mismatch: field.user_id={field.get("user_id")}, user_id={user_id}')
             return jsonify({'error': 'Invalid field'}), 400
 
         # Create batch
+        batch_id = str(uuid.uuid4())
         batch_data = {
-            'batch_id': str(uuid.uuid4()),
+            'batch_id': batch_id,
             'user_id': user_id,
             'field_id': data['field_id'],
             'crop_type': data['crop_type'],
@@ -126,18 +184,21 @@ def create_batch() -> Tuple[Response, int]:
             'updated_at': datetime.utcnow()
         }
 
-        batch_id = db.create_document(
-            'crop_batches', batch_data, batch_data['batch_id'])
+        logger.info(f'Creating batch document with batch_id={batch_id}')
+        created_id = db.create_document(
+            'crop_batches', batch_data, batch_id)
+
+        logger.info(f'Batch created successfully: batch_id={created_id}')
 
         return jsonify({
             'success': True,
-            'batch_id': batch_id,
+            'batch_id': created_id,
             'message': 'Batch created successfully'
         }), 201
 
     except Exception as e:  # pylint: disable=broad-except
-        logger.error(f'Error creating batch: {str(e)}')
-        return jsonify({'error': 'Failed to create batch'}), 500
+        logger.error(f'Error creating batch: {str(e)}', exc_info=True)
+        return jsonify({'error': f'Failed to create batch: {str(e)}'}), 500
 
 
 @bp.route('/<batch_id>', methods=['PUT'])

@@ -257,9 +257,17 @@ class _KnowledgeBaseScreenState extends State<KnowledgeBaseScreen> {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    height: 1.2,
+                    ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.left,
                 ),
               ),
+              const SizedBox(width: 8),
               const Icon(Icons.arrow_forward_ios, size: 16),
             ],
           ),

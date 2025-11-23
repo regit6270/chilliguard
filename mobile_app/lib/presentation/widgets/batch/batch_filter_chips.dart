@@ -27,14 +27,21 @@ class BatchFilterChips extends StatelessWidget {
             child: FilterChip(
               label: Row(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     filter['icon'] as IconData,
-                    size: 16,
+                    size: 14,
                     color: isSelected ? Colors.white : Colors.grey[700],
                   ),
                   const SizedBox(width: 4),
-                  Text(filter['label'] as String),
+                  Flexible(
+                    child: Text(
+                      filter['label'] as String,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ),
                 ],
               ),
               selected: isSelected,
@@ -46,10 +53,11 @@ class BatchFilterChips extends StatelessWidget {
               selectedColor: Theme.of(context).colorScheme.primary,
               labelStyle: TextStyle(
                 color: isSelected ? Colors.white : Colors.grey[700],
-                fontSize: 12,
+                fontSize: 11,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
               backgroundColor: Colors.grey[100],
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
                 side: BorderSide(

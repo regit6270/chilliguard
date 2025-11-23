@@ -43,8 +43,8 @@ def require_auth(f: Callable) -> Callable:
         if not field_id:
             return jsonify({'error': 'field_id parameter required'}), 400
 
-        # Store user_id in context (for demo, hardcode to demo_user_001)
-        kwargs['user_id'] = 'demo_user_001'
+        # Note: user_id is retrieved via get_user_id() function in endpoints
+        # Don't pass it as kwargs to avoid TypeError for functions that don't accept it
 
         return f(*args, **kwargs)
 

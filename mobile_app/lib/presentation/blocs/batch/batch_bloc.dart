@@ -37,15 +37,23 @@ class BatchBloc extends Bloc<BatchEvent, BatchState> {
       result.fold(
         (failure) => emit(BatchError(failure.message)),
         (batches) {
-          // Find active batch
-          final activeBatch = batches.firstWhere(
-            (b) => b.status == 'active',
-            orElse: () => batches.first,
-          );
+          // Find active batch - only if batches list is not empty
+          CropBatch? activeBatch;
+          if (batches.isNotEmpty) {
+            try {
+              activeBatch = batches.firstWhere(
+                (b) => b.status == 'active',
+                orElse: () => batches.first,
+              );
+            } catch (e) {
+              // Fallback to first batch if no active found
+              activeBatch = batches.first;
+            }
+          }
 
           emit(BatchesLoaded(
             batches: batches,
-            activeBatch: batches.isNotEmpty ? activeBatch : null,
+            activeBatch: activeBatch,
           ));
         },
       );
@@ -85,8 +93,8 @@ class BatchBloc extends Bloc<BatchEvent, BatchState> {
         (failure) => emit(BatchError(failure.message)),
         (batchId) {
           emit(BatchCreated(batchId));
-          // Reload batches after creation
-          add(LoadBatches(fieldId: event.batch.fieldId));
+          // Note: Batch list screen will reload when user navigates back
+          // The screen's initState or visibility change will trigger reload
         },
       );
     } catch (e) {

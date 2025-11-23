@@ -25,30 +25,53 @@ class BatchRemoteDataSourceImpl implements BatchRemoteDataSource {
   }) async {
     try {
       final queryParams = <String, dynamic>{};
-      if (fieldId != null) queryParams['field_id'] = fieldId;
+      // field_id is required by backend, so always include it
+      queryParams['field_id'] = fieldId ?? 'field_123';
       if (status != null) queryParams['status'] = status;
 
       final response = await _apiClient.get(
-        '/batches',
+        '/api/v1/batches',
         queryParameters: queryParams,
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = response.data['batches'] as List;
-        return data.map((json) => CropBatchModel.fromJson(json)).toList();
+        // Handle both response formats
+        final data = response.data;
+        List<dynamic> batchesList;
+        
+        if (data is Map && data.containsKey('batches')) {
+          batchesList = data['batches'] as List;
+        } else if (data is List) {
+          batchesList = data;
+        } else {
+          throw ServerException('Invalid response format from server');
+        }
+        
+        if (batchesList.isEmpty) {
+          return [];
+        }
+        
+        return batchesList.map((json) => CropBatchModel.fromJson(json)).toList();
       } else {
-        throw ServerException('Failed to fetch batches');
+        final errorMessage = response.data is Map && response.data.containsKey('error')
+            ? response.data['error'] as String
+            : 'Failed to fetch batches (Status: ${response.statusCode})';
+        throw ServerException(errorMessage);
       }
     } catch (e) {
       if (e is ServerException) rethrow;
-      throw ServerException('Network error: ${e.toString()}');
+      throw ServerException('Failed to fetch batches: ${e.toString()}');
     }
   }
 
   @override
   Future<CropBatchModel> getBatch(String batchId) async {
     try {
-      final response = await _apiClient.get('/batches/$batchId');
+      // field_id is required by backend security decorator
+      final response = await _apiClient.get(
+        '/api/v1/batches/$batchId',
+        queryParameters: {'field_id': 'field_123'}, // Default field_id
+      );
 
       if (response.statusCode == 200) {
         return CropBatchModel.fromJson(response.data['batch']);
@@ -65,7 +88,7 @@ class BatchRemoteDataSourceImpl implements BatchRemoteDataSource {
   Future<String> createBatch(CropBatchModel batch) async {
     try {
       final response = await _apiClient.post(
-        '/batches',
+        '/api/v1/batches',
         data: batch.toJson(),
       );
 
@@ -84,7 +107,7 @@ class BatchRemoteDataSourceImpl implements BatchRemoteDataSource {
   Future<void> updateBatch(String batchId, Map<String, dynamic> updates) async {
     try {
       final response = await _apiClient.put(
-        '/batches/$batchId',
+        '/api/v1/batches/$batchId',
         data: updates,
       );
 

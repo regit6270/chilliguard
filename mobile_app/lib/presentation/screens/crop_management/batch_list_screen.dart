@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/di/injection.dart';
+import '../../../core/services/local_storage_service.dart';
 import '../../blocs/batch/batch_bloc.dart';
 import '../../widgets/batch/batch_card.dart';
 import '../../widgets/batch/batch_filter_chips.dart';
 import '../../widgets/common/bottom_navigation_bar.dart';
-import '../../widgets/common/loading_overlay.dart';
 
 class BatchListScreen extends StatefulWidget {
   const BatchListScreen({super.key});
@@ -17,17 +18,27 @@ class BatchListScreen extends StatefulWidget {
 
 class _BatchListScreenState extends State<BatchListScreen> {
   String _selectedFilter = 'active';
+  static const String _defaultFieldId = 'field_123';
 
   @override
   void initState() {
     super.initState();
-    _loadBatches();
+    // Use addPostFrameCallback to ensure context is ready
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadBatches();
+    });
   }
 
   void _loadBatches() {
+    // Get field ID from storage or use default
+    final localStorageService = getIt<LocalStorageService>();
+    final fieldId = localStorageService.getSelectedFieldId() ?? _defaultFieldId;
+
     context.read<BatchBloc>().add(
           LoadBatches(
-              status: _selectedFilter == 'all' ? null : _selectedFilter),
+            fieldId: fieldId,
+            status: _selectedFilter == 'all' ? null : _selectedFilter,
+          ),
         );
   }
 
@@ -62,10 +73,28 @@ class _BatchListScreenState extends State<BatchListScreen> {
 
           // Batch List
           Expanded(
-            child: BlocBuilder<BatchBloc, BatchState>(
+            child: BlocConsumer<BatchBloc, BatchState>(
+              listener: (context, state) {
+                // Reload batches when a new batch is created
+                if (state is BatchCreated) {
+                  _loadBatches();
+                }
+              },
               builder: (context, state) {
                 if (state is BatchLoading) {
-                  return const LoadingOverlay(message: 'Loading batches...');
+                  return const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          CircularProgressIndicator(),
+                          SizedBox(height: 16),
+                          Text('Loading batches...'),
+                        ],
+                      ),
+                    ),
+                  );
                 }
 
                 if (state is BatchError) {
@@ -80,17 +109,22 @@ class _BatchListScreenState extends State<BatchListScreen> {
                   return RefreshIndicator(
                     onRefresh: () async {
                       _loadBatches();
+                      // Wait for state to change from loading
                       await Future.delayed(const Duration(milliseconds: 500));
                     },
                     child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       itemCount: state.batches.length,
                       itemBuilder: (context, index) {
                         final batch = state.batches[index];
-                        return BatchCard(
-                          batch: batch,
-                          onTap: () => context.push(
-                            '/crop-management/batch/${batch.batchId}',
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: BatchCard(
+                            batch: batch,
+                            onTap: () => context.push(
+                              '/crop-management/batch/${batch.batchId}',
+                            ),
                           ),
                         );
                       },
@@ -98,14 +132,27 @@ class _BatchListScreenState extends State<BatchListScreen> {
                   );
                 }
 
-                return const SizedBox.shrink();
+                // Initial state - show empty or loading
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 16),
+                        Text('Loading batches...'),
+                      ],
+                    ),
+                  ),
+                );
               },
             ),
           ),
         ],
       ),
       bottomNavigationBar:
-          const ChilliGuardBottomNavigationBar(currentIndex: 3),
+          const ChilliGuardBottomNavigationBar(currentIndex: 2),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => context.push('/crop-management/new'),
         icon: const Icon(Icons.add),

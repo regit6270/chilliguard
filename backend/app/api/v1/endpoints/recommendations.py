@@ -74,8 +74,8 @@ SOIL_IMPROVEMENT_RULES = {
         "issue_hi": "नाइट्रोजन की कमी",
         "description": "Nitrogen promotes vegetative growth, leaf development, and protein synthesis. Critical for robust chilli plants.",
         "description_hi": "नाइट्रोजन पत्तियों के विकास और प्रोटीन संश्लेषण के लिए महत्वपूर्ण है।",
-        "current_thresholds": "< 100 ppm soil N",
-        "target_range": "100-150 ppm",
+        "current_thresholds": "< 80 ppm soil N",
+        "target_range": "80-150 ppm",
         "solution": "Apply urea or nitrogen-rich organic fertilizer",
         "solution_hi": "यूरिया या नाइट्रोजन युक्त जैविक खाद लगाएं",
         "dosage": "For hybrid: 120 kg N/ha total; For local: 90 kg N/ha",
@@ -84,7 +84,7 @@ SOIL_IMPROVEMENT_RULES = {
         "application_method": "Basal dose mixed with soil. Top dressing via side dressing near plant base.",
         "organic_alternative": "Vermicompost (5 tons/ha) or Jeevamrutha (2000 liters/ha) application",
         "estimated_cost": "₹1,500-2,500/hectare",
-        "priority": "medium",
+        "priority": "low",
         "indicators": ["Light green older leaves", "Stunted growth", "Short branches", "Reduced fruit size"]
     },
 
@@ -93,8 +93,8 @@ SOIL_IMPROVEMENT_RULES = {
         "issue_hi": "फॉस्फोरस की कमी",
         "description": "Phosphorus essential for root development, flowering, and fruit formation. Supports energy transfer in plants.",
         "description_hi": "फॉस्फोरस जड़ विकास, फूल और फल निर्माण के लिए आवश्यक है।",
-        "current_thresholds": "< 50 ppm available P",
-        "target_range": "50-75 ppm",
+        "current_thresholds": "< 20 ppm available P",
+        "target_range": "20-40 ppm",
         "solution": "Apply phosphate-based fertilizer",
         "solution_hi": "फॉस्फेट आधारित खाद लगाएं",
         "dosage": "For hybrid: 80 kg P₂O₅/ha; For local: 60 kg P₂O₅/ha",
@@ -112,8 +112,8 @@ SOIL_IMPROVEMENT_RULES = {
         "issue_hi": "पोटेशियम की कमी",
         "description": "Potassium crucial for water movement, enzyme activation, and fruit quality. Increases pest resistance.",
         "description_hi": "पोटेशियम फल की गुणवत्ता और कीट प्रतिरोध के लिए महत्वपूर्ण है।",
-        "current_thresholds": "< 150 ppm available K",
-        "target_range": "150-200 ppm",
+        "current_thresholds": "< 100 ppm available K",
+        "target_range": "100-200 ppm",
         "solution": "Apply potassium sulfate for quality improvement",
         "solution_hi": "गुणवत्ता में सुधार के लिए पोटेशियम सल्फेट लगाएं",
         "dosage": "For hybrid: 80 kg K₂O/ha; For local: 50 kg K₂O/ha",
@@ -122,7 +122,7 @@ SOIL_IMPROVEMENT_RULES = {
         "application_method": "Basal mixed with soil. Top dressing via drip or side application.",
         "organic_alternative": "Wood ash (500 kg/ha) or Kelp meal with compost",
         "estimated_cost": "₹1,800-3,000/hectare",
-        "priority": "medium",
+        "priority": "high",
         "indicators": ["Marginal scorching (brown leaf edges)", "Reduced fruit size", "Poor fruit color development", "Crinkled leaves"]
     },
 
@@ -131,8 +131,8 @@ SOIL_IMPROVEMENT_RULES = {
         "issue_hi": "अत्यधिक मिट्टी में नमी (जलभराव)",
         "description": "Chilli cannot tolerate waterlogging. Excess moisture causes root rot, fungal diseases, and poor growth.",
         "description_hi": "मिर्च जलभराव सहन नहीं कर सकती। अतिरिक्त नमी जड़ सड़न और कवक रोग का कारण बनती है।",
-        "current_thresholds": "> 75% soil moisture",
-        "target_range": "60-70% (optimal)",
+        "current_thresholds": "> 70% soil moisture",
+        "target_range": "60-70%",
         "solution": "Improve field drainage immediately",
         "solution_hi": "तुरंत खेत की जल निकासी में सुधार करें",
         "dosage": "Install drainage channels (30 cm deep, 1m apart) and raised beds (20 cm height)",
@@ -141,7 +141,7 @@ SOIL_IMPROVEMENT_RULES = {
         "application_method": "Create raised beds or furrows. Use drip irrigation instead of flood.",
         "organic_alternative": "Mulching with straw (5-7 cm) to improve water drainage and reduce standing water",
         "estimated_cost": "₹5,000-8,000/hectare (one-time investment)",
-        "priority": "high",
+        "priority": "medium",
         "indicators": ["Root rot", "Yellowing leaves", "Fungal diseases", "Poor growth", "Bad odor from soil"]
     },
 
@@ -150,7 +150,7 @@ SOIL_IMPROVEMENT_RULES = {
         "issue_hi": "कम मिट्टी में नमी (सूखा तनाव)",
         "description": "Chilli requires consistent moisture (60-70%). Water stress reduces flowering and causes fruit drop.",
         "description_hi": "मिर्च को सुसंगत नमी (60-70%) की आवश्यकता है। पानी की कमी फूल और फल गिराव का कारण बनती है।",
-        "current_thresholds": "< 55% soil moisture",
+        "current_thresholds": "< 60% soil moisture",
         "target_range": "60-70%",
         "solution": "Install drip irrigation system with mulching",
         "solution_hi": "ड्रिप सिंचाई प्रणाली लगाएं और गीली घास से ढकें",
@@ -160,17 +160,17 @@ SOIL_IMPROVEMENT_RULES = {
         "application_method": "Drip lines at plant base. Apply mulch (straw, dry leaves) around plants.",
         "organic_alternative": "Organic mulch (5 cm straw) + compost layer increases water retention by 15-20%",
         "estimated_cost": "₹3,000-6,000/hectare",
-        "priority": "high",
+        "priority": "medium",
         "indicators": ["Wilting leaves", "Flower/fruit drop", "Stunted growth", "Hard, cracked soil"]
     },
 
     "temperature_stress": {
         "issue": "Temperature outside optimal range",
         "issue_hi": "तापमान इष्टतम सीमा के बाहर",
-        "description": "Chilli growth optimal at 20-25°C. Temperatures < 18°C or > 30°C reduce flowering and fruit set.",
-        "description_hi": "मिर्च का विकास 20-25°C पर इष्टतम है। कम तापमान फूल निर्माण को कम करता है।",
-        "current_thresholds": "< 18°C or > 30°C during critical stages",
-        "target_range": "20-25°C (growth), 25-30°C (fruiting)",
+        "description": "Chilli growth optimal at 20-30°C. Temperatures < 20°C or > 30°C reduce flowering and fruit set.",
+        "description_hi": "मिर्च का विकास 20-30°C पर इष्टतम है। कम तापमान फूल निर्माण को कम करता है।",
+        "current_thresholds": "< 20°C or > 30°C during critical stages",
+        "target_range": "20-30°C",
         "solution": "Adjust sowing/transplanting time to match season",
         "solution_hi": "बुवाई का समय मौसम के अनुसार समायोजित करें",
         "dosage": "N/A - seasonal management",
@@ -185,10 +185,10 @@ SOIL_IMPROVEMENT_RULES = {
     "humidity_stress": {
         "issue": "High humidity favoring fungal diseases",
         "issue_hi": "उच्च आर्द्रता कवक रोग में सहायक",
-        "description": "High humidity (> 80%) combined with warm weather promotes bacterial and fungal diseases.",
+        "description": "High humidity (> 75%) combined with warm weather promotes bacterial and fungal diseases.",
         "description_hi": "उच्च आर्द्रता और गर्म मौसम कवक रोग को बढ़ावा देते हैं।",
-        "current_thresholds": "> 80% relative humidity",
-        "target_range": "60-80% RH",
+        "current_thresholds": "> 75% relative humidity",
+        "target_range": "60-75% RH",
         "solution": "Improve air circulation through proper spacing and pruning",
         "solution_hi": "उचित दूरी और छंटाई से हवा के प्रवाह में सुधार करें",
         "dosage": "Plant spacing: 60 cm × 45 cm (for intercultivation)",
@@ -207,10 +207,10 @@ SOIL_IMPROVEMENT_RULES = {
     "nitrogen_high": {
         "issue": "Nitrogen excess (over-fertilization)",
         "issue_hi": "नाइट्रोजन की अधिकता (अत्यधिक खाद)",
-        "description": "Excess nitrogen (>180 ppm) causes excessive vegetative growth with poor flowering and fruiting. Increases pest susceptibility and disease incidence. Reduces nitrogen use efficiency (NUE) and causes environmental pollution (nitrate leaching).",
-        "description_hi": "अत्यधिक नाइट्रोजन (>180 ppm) के कारण अधिक पत्तियां बनती हैं लेकिन फूल और फल कम आते हैं। कीटों और रोगों का खतरा बढ़ता है।",
-        "current_thresholds": "> 180 ppm soil N",
-        "target_range": "100-150 ppm",
+        "description": "Excess nitrogen (>150 ppm) causes excessive vegetative growth with poor flowering and fruiting. Increases pest susceptibility and disease incidence. Reduces nitrogen use efficiency (NUE) and causes environmental pollution (nitrate leaching).",
+        "description_hi": "अत्यधिक नाइट्रोजन (>150 ppm) के कारण अधिक पत्तियां बनती हैं लेकिन फूल और फल कम आते हैं। कीटों और रोगों का खतरा बढ़ता है।",
+        "current_thresholds": "> 150 ppm soil N",
+        "target_range": "80-150 ppm",
         "solution": "Stop nitrogen application immediately; increase potassium to balance growth",
         "solution_hi": "नाइट्रोजन का प्रयोग बंद करें; पोटेशियम बढ़ाएं",
         "dosage": "N/A - cease application. Apply 20-30 kg K₂O/ha to promote flowering",
@@ -238,10 +238,10 @@ SOIL_IMPROVEMENT_RULES = {
     "phosphorus_high": {
         "issue": "Phosphorus excess (over-application)",
         "issue_hi": "फॉस्फोरस की अधिकता (अत्यधिक लगाव)",
-        "description": "Excess phosphorus (>150 ppm) induces calcium deficiency leading to Blossom End Rot (BER) in fruits. High P reduces Zn, Fe, Cu absorption. Creates nutrient imbalance affecting root development and disease resistance.",
-        "description_hi": "अत्यधिक फॉस्फोरस (>150 ppm) कैल्शियम की कमी का कारण बनता है। फलों के सिरे पर सड़न आती है (BER)।",
-        "current_thresholds": "> 150 ppm available P",
-        "target_range": "50-75 ppm",
+        "description": "Excess phosphorus (>40 ppm) induces calcium deficiency leading to Blossom End Rot (BER) in fruits. High P reduces Zn, Fe, Cu absorption. Creates nutrient imbalance affecting root development and disease resistance.",
+        "description_hi": "अत्यधिक फॉस्फोरस (>40 ppm) कैल्शियम की कमी का कारण बनता है। फलों के सिरे पर सड़न आती है (BER)।",
+        "current_thresholds": "> 40 ppm available P",
+        "target_range": "20-40 ppm",
         "solution": "Cease phosphorus application; apply calcium and zinc to correct deficiencies",
         "solution_hi": "फॉस्फोरस का प्रयोग बंद करें; कैल्शियम और जस्ता लगाएं",
         "dosage": "N/A - cease SSP/DAP. Apply Gypsum 500 kg/ha + Zinc Sulfate 5 kg/ha",
@@ -268,10 +268,10 @@ SOIL_IMPROVEMENT_RULES = {
     "potassium_high": {
         "issue": "Potassium excess (over-application)",
         "issue_hi": "पोटेशियम की अधिकता (अत्यधिक लगाव)",
-        "description": "Excess potassium (>300 ppm) causes salt stress and nutrient imbalance. High K reduces magnesium and calcium absorption. Increases soil EC (Electrical Conductivity) causing osmotic stress and poor water uptake.",
-        "description_hi": "अत्यधिक पोटेशियम (>300 ppm) से नमक का तनाव होता है। मैग्नीशियम और कैल्शियम की कमी हो जाती है।",
-        "current_thresholds": "> 300 ppm available K",
-        "target_range": "150-200 ppm",
+        "description": "Excess potassium (>200 ppm) causes salt stress and nutrient imbalance. High K reduces magnesium and calcium absorption. Increases soil EC (Electrical Conductivity) causing osmotic stress and poor water uptake.",
+        "description_hi": "अत्यधिक पोटेशियम (>200 ppm) से नमक का तनाव होता है। मैग्नीशियम और कैल्शियम की कमी हो जाती है।",
+        "current_thresholds": "> 200 ppm available K",
+        "target_range": "100-200 ppm",
         "solution": "Cease potassium application; increase magnesium and calcium inputs",
         "solution_hi": "पोटेशियम का प्रयोग बंद करें; मैग्नीशियम और कैल्शियम बढ़ाएं",
         "dosage": "N/A - cease MOP/SOP application. Apply Dolomite (CaMg CO₃) 1-1.5 tons/ha",
@@ -280,7 +280,7 @@ SOIL_IMPROVEMENT_RULES = {
         "application_method": "Incorporate dolomite into soil; MgSO₄ as side dressing near plants",
         "organic_alternative": "Use wood ash cautiously (low ash sources); apply compost with natural Mg content",
         "estimated_cost": "₹1,500-2,500/hectare (dolomite + magnesium corrective)",
-        "priority": "medium",
+        "priority": "high",
         "indicators": [
             "Wilting despite adequate moisture (osmotic stress)",
             "Marginal leaf scorch (initially from high K, later Mg-deficiency)",
@@ -296,58 +296,58 @@ SOIL_IMPROVEMENT_RULES = {
     }
 }
 
-# VALIDATION CONSTANTS (Research-backed for Indian chilli cultivation)
+# VALIDATION CONSTANTS (User-specified ranges)
 VALID_SENSORS = {
-    'ph': {'min': 4.0, 'max': 9.0, 'optimal': (6.5, 7.5)},
-    'nitrogen': {'min': 0, 'max': 500, 'optimal': (100, 150), 'unit': 'ppm'},
-    'phosphorus': {'min': 0, 'max': 300, 'optimal': (50, 75), 'unit': 'ppm'},
-    'potassium': {'min': 0, 'max': 500, 'optimal': (150, 200), 'unit': 'ppm'},  # CORRECTED from (50, 100)
+    'ph': {'min': 4.0, 'max': 9.0, 'optimal': (5.5, 7.5)},
+    'nitrogen': {'min': 0, 'max': 500, 'optimal': (80, 150), 'unit': 'ppm'},
+    'phosphorus': {'min': 0, 'max': 300, 'optimal': (20, 40), 'unit': 'ppm'},
+    'potassium': {'min': 0, 'max': 500, 'optimal': (100, 200), 'unit': 'ppm'},
     'moisture': {'min': 0, 'max': 100, 'optimal': (60, 70), 'unit': '%'},
-    'temperature': {'min': 5, 'max': 50, 'optimal': (20, 25), 'unit': '°C'},
-    'humidity': {'min': 0, 'max': 100, 'optimal': (60, 80), 'unit': '%'}
+    'temperature': {'min': 5, 'max': 50, 'optimal': (20, 30), 'unit': '°C'},
+    'humidity': {'min': 0, 'max': 100, 'optimal': (60, 75), 'unit': '%'}
 }
 
-# THRESHOLD CONSTANTS (Research-backed from ICAR/TNAU studies)
+# THRESHOLD CONSTANTS
 NPK_THRESHOLDS = {
     'nitrogen': {
-        'low': 100,          # Below this = deficiency
-        'optimal_min': 100,
+        'low': 80,
+        'optimal_min': 80,
         'optimal_max': 150,
-        'high': 180          # Above this = excess (NEW)
+        'high': 150  # Above this = excess
     },
     'phosphorus': {
-        'low': 50,           # Below this = deficiency
-        'optimal_min': 50,
-        'optimal_max': 75,
-        'high': 150          # Above this = excess (NEW)
+        'low': 20,
+        'optimal_min': 20,
+        'optimal_max': 40,
+        'high': 40  # Above this = excess
     },
     'potassium': {
-        'low': 150,          # CORRECTED from 50 (was WRONG)
-        'optimal_min': 150,  # CORRECTED from 100
-        'optimal_max': 200,  # CORRECTED from (not present)
-        'high': 300          # Above this = excess (NEW)
+        'low': 100,
+        'optimal_min': 100,
+        'optimal_max': 200,
+        'high': 200  # Above this = excess
     }
 }
 
 MOISTURE_THRESHOLDS = {
-    'low': 55,             # Below this = drought stress
+    'low': 60,
     'optimal_min': 60,
     'optimal_max': 70,
-    'high': 75             # Above this = waterlogging
+    'high': 70  # Above this = waterlogging
 }
 
 TEMPERATURE_THRESHOLDS = {
-    'low': 18,
+    'low': 20,
     'optimal_min': 20,
-    'optimal_max': 25,
+    'optimal_max': 30,
     'high': 30
 }
 
 HUMIDITY_THRESHOLDS = {
-    'low': 40,
+    'low': 60,
     'optimal_min': 60,
-    'optimal_max': 80,
-    'high': 85             # >85% favors fungal diseases
+    'optimal_max': 75,
+    'high': 75
 }
 
 
@@ -490,8 +490,8 @@ def get_soil_improvements() -> Tuple[Response, int]:
         # ====================================================================
         # 4. NITROGEN RECOMMENDATIONS (CORRECTED LOGIC)
         # ====================================================================
-        # Optimal for chilli: 100-150 ppm (ICAR)
-        # Low: <100 ppm | High: >180 ppm (NEW - from research)
+        # Optimal for chilli: 80-150 ppm (ICAR)
+        # Low: <80 ppm | High: >=150 ppm (NEW - from research)
 
         nitrogen = validated_data.get('nitrogen', 125)  # Default to mid-range
 
@@ -507,7 +507,7 @@ def get_soil_improvements() -> Tuple[Response, int]:
             recommendations.append(rec)
             logger.info(f"[{field_id}] NITROGEN LOW: {nitrogen} ppm (deficit: {rec['deficit']} ppm)")
 
-        elif nitrogen > NPK_THRESHOLDS['nitrogen']['high']:
+        elif nitrogen >= NPK_THRESHOLDS['nitrogen']['high']:
             # NITROGEN EXCESS (NEW - from updated database)
             rec = SOIL_IMPROVEMENT_RULES['nitrogen_high'].copy()
             rec['current_value'] = nitrogen
@@ -521,8 +521,8 @@ def get_soil_improvements() -> Tuple[Response, int]:
         # ====================================================================
         # 5. PHOSPHORUS RECOMMENDATIONS (CORRECTED LOGIC)
         # ====================================================================
-        # Optimal for chilli: 50-75 ppm (ICAR)
-        # Low: <50 ppm | High: >150 ppm (NEW - from research)
+        # Optimal for chilli: 20-40 ppm (ICAR)
+        # Low: <20 ppm | High: >=40 ppm (NEW - from research)
 
         phosphorus = validated_data.get('phosphorus', 62)  # Default to mid-range
 
@@ -538,7 +538,7 @@ def get_soil_improvements() -> Tuple[Response, int]:
             recommendations.append(rec)
             logger.info(f"[{field_id}] PHOSPHORUS LOW: {phosphorus} ppm (deficit: {rec['deficit']} ppm)")
 
-        elif phosphorus > NPK_THRESHOLDS['phosphorus']['high']:
+        elif phosphorus >= NPK_THRESHOLDS['phosphorus']['high']:
             # PHOSPHORUS EXCESS (NEW - from updated database)
             # Risk of Blossom End Rot (BER) and Zn deficiency
             rec = SOIL_IMPROVEMENT_RULES['phosphorus_high'].copy()
@@ -554,8 +554,8 @@ def get_soil_improvements() -> Tuple[Response, int]:
         # ====================================================================
         # 6. POTASSIUM RECOMMENDATIONS (CORRECTED LOGIC)
         # ====================================================================
-        # Optimal for chilli: 150-200 ppm (ICAR) - CORRECTED from (50-100)
-        # Low: <150 ppm (CORRECTED from <50) | High: >300 ppm (NEW)
+        # Optimal for chilli: 100-200 ppm (ICAR)
+        # Low: <100 ppm | High: >=200 ppm (NEW)
 
         potassium = validated_data.get('potassium', 175)  # Default to mid-range
 
@@ -563,7 +563,6 @@ def get_soil_improvements() -> Tuple[Response, int]:
             # POTASSIUM DEFICIENCY
             rec = SOIL_IMPROVEMENT_RULES['potassium_low'].copy()
             rec['current_value'] = potassium
-            rec['target_range'] = "150-200 ppm"  # CORRECTED from "50-100 ppm"
             rec['deficit'] = round(NPK_THRESHOLDS['potassium']['optimal_min'] - potassium, 2)
             rec['deficit_percentage'] = round(
                 ((NPK_THRESHOLDS['potassium']['optimal_min'] - potassium) /
@@ -572,7 +571,7 @@ def get_soil_improvements() -> Tuple[Response, int]:
             recommendations.append(rec)
             logger.info(f"[{field_id}] POTASSIUM LOW: {potassium} ppm (deficit: {rec['deficit']} ppm)")
 
-        elif potassium > NPK_THRESHOLDS['potassium']['high']:
+        elif potassium >= NPK_THRESHOLDS['potassium']['high']:
             # POTASSIUM EXCESS (NEW - from updated database)
             # Risk of salt stress and Mg/Ca antagonism
             rec = SOIL_IMPROVEMENT_RULES['potassium_high'].copy()
@@ -589,11 +588,11 @@ def get_soil_improvements() -> Tuple[Response, int]:
         # 7. MOISTURE RECOMMENDATIONS
         # ====================================================================
         # Optimal for chilli: 60-70% (ICAR)
-        # Low (drought): <55% | High (waterlogging): >75%
+        # Low (drought): <60% | High (waterlogging): >=70%
 
         moisture = validated_data.get('moisture', 65)
 
-        if moisture > MOISTURE_THRESHOLDS['high']:
+        if moisture >= MOISTURE_THRESHOLDS['high']:
             # WATERLOGGING / EXCESSIVE MOISTURE
             rec = SOIL_IMPROVEMENT_RULES['moisture_high'].copy()
             rec['current_value'] = f"{moisture}%"
@@ -622,7 +621,7 @@ def get_soil_improvements() -> Tuple[Response, int]:
         # ====================================================================
         # 8. TEMPERATURE RECOMMENDATIONS (NEW - from updated database)
         # ====================================================================
-        # Optimal for chilli: 20-25°C (ICAR)
+        # Optimal for chilli: 20-30°C (ICAR)
 
         if 'temperature' in validated_data:
             temperature = validated_data['temperature']
@@ -641,8 +640,8 @@ def get_soil_improvements() -> Tuple[Response, int]:
         # ====================================================================
         # 9. HUMIDITY RECOMMENDATIONS (NEW - from updated database)
         # ====================================================================
-        # Optimal for chilli: 60-80% RH (ICAR)
-        # High humidity (>85%) promotes fungal diseases
+        # Optimal for chilli: 60-75% RH (ICAR)
+        # High humidity (>=75%) promotes fungal diseases
 
         if 'humidity' in validated_data:
             humidity = validated_data['humidity']

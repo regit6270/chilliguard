@@ -31,34 +31,34 @@ FIELD_ID = 'field_123'  # Matches frontend default field ID
 
 SENSOR_RANGES = {
     'ph': {
-        'optimal': (6.5, 7.5),
+        'optimal': (5.5, 7.5),
         'variation': 0.3,
     },
     'nitrogen': {
-        'optimal': (80, 120),  # ppm - slightly below optimal to show need for fertilizer
+        'optimal': (80, 150),  # ppm
         'variation': 5,  # Daily variation
     },
     'phosphorus': {
-        'optimal': (35, 55),  # ppm - slightly below optimal
+        'optimal': (20, 40),  # ppm
         'variation': 3,
     },
     'potassium': {
-        'optimal': (110, 140),  # ppm - slightly below optimal
+        'optimal': (100, 200),  # ppm
         'variation': 5,
     },
     'moisture': {
-        'day': (55, 65),  # % - slightly dry during day
-        'night': (65, 75),  # % - higher at night
+        'day': (60, 70),  # %
+        'night': (65, 70),  # %
         'variation': 3,
     },
     'temperature': {
-        'day': (28, 34),  # °C - Indian summer conditions
-        'night': (22, 26),  # °C - cooler at night
+        'day': (20, 30),  # °C
+        'night': (22, 28),  # °C
         'variation': 2,
     },
     'humidity': {
-        'day': (60, 75),  # % - moderate humidity
-        'night': (75, 85),  # % - higher at night
+        'day': (60, 75),  # %
+        'night': (70, 75),  # %
         'variation': 3,
     },
 }

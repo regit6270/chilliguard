@@ -123,11 +123,11 @@ class RealtimeDBService:
     def _calculate_status(self, data):
         """
         Calculate good/okay/bad status for each parameter
-        Based on chilli crop optimal ranges
+        Based on user-specified optimal ranges
         """
         status = {}
 
-        # pH: optimal 5.5-7.5, acceptable 5.0-8.0
+        # pH: optimal 5.5-7.5
         ph = float(data.get('ph', 0))
         if 5.5 <= ph <= 7.5:
             status['ph'] = 'optimal'
@@ -136,47 +136,47 @@ class RealtimeDBService:
         else:
             status['ph'] = 'critical'
 
-        # Nitrogen: optimal 100-150 ppm
+        # Nitrogen: optimal 80-150 ppm
         nitrogen = int(data.get('nitrogen', 0))
-        if 100 <= nitrogen <= 150:
+        if 80 <= nitrogen <= 150:
             status['nitrogen'] = 'optimal'
-        elif 80 <= nitrogen <= 180:
+        elif 70 <= nitrogen < 80 or 150 < nitrogen <= 170:
             status['nitrogen'] = 'needs_attention'
         else:
             status['nitrogen'] = 'critical'
 
-        # Phosphorus: optimal 40-60 ppm
+        # Phosphorus: optimal 20-40 ppm
         phosphorus = int(data.get('phosphorus', 0))
-        if 40 <= phosphorus <= 60:
+        if 20 <= phosphorus <= 40:
             status['phosphorus'] = 'optimal'
-        elif 30 <= phosphorus <= 80:
+        elif 15 <= phosphorus < 20 or 40 < phosphorus <= 50:
             status['phosphorus'] = 'needs_attention'
         else:
             status['phosphorus'] = 'critical'
 
-        # Potassium: optimal 150-200 ppm
+        # Potassium: optimal 100-200 ppm
         potassium = int(data.get('potassium', 0))
-        if 150 <= potassium <= 200:
+        if 100 <= potassium <= 200:
             status['potassium'] = 'optimal'
-        elif 100 <= potassium <= 250:
+        elif 80 <= potassium < 100 or 200 < potassium <= 250:
             status['potassium'] = 'needs_attention'
         else:
             status['potassium'] = 'critical'
 
-        # Moisture: optimal 60-80%
+        # Moisture: optimal 60-70%
         moisture = float(data.get('moisture', 0))
-        if 60 <= moisture <= 80:
+        if 60 <= moisture <= 70:
             status['moisture'] = 'optimal'
-        elif 50 <= moisture <= 90:
+        elif 55 <= moisture < 60 or 70 < moisture <= 75:
             status['moisture'] = 'needs_attention'
         else:
             status['moisture'] = 'critical'
 
-        # Temperature: optimal 25-30°C
+        # Temperature: optimal 20-30°C
         temperature = float(data.get('temperature', 0))
-        if 25 <= temperature <= 30:
+        if 20 <= temperature <= 30:
             status['temperature'] = 'optimal'
-        elif 20 <= temperature <= 35:
+        elif 15 <= temperature < 20 or 30 < temperature <= 35:
             status['temperature'] = 'needs_attention'
         else:
             status['temperature'] = 'critical'

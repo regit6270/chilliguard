@@ -1,7 +1,7 @@
 """
 Seed Firebase Realtime Database with realistic sensor data for ChilliGuard.
 
-Populates 5 days of sensor readings (3 day + 3 night readings per day)
+Populates 90 days of sensor readings (3 day + 3 night readings per day)
 Based on Indian soil conditions for chilli cultivation
 """
 import os
@@ -134,7 +134,7 @@ def generate_realistic_reading(
 
 
 def seed_rtdb_sensor_data() -> None:
-    """Seed RTDB with 5 days of sensor readings (30 total readings)."""
+    """Seed RTDB with 90 days of sensor readings (540 total readings)."""
     print("\n" + "="*70)
     print("FIREBASE REALTIME DATABASE SEEDING SCRIPT")
     print("="*70)
@@ -168,13 +168,18 @@ def seed_rtdb_sensor_data() -> None:
 
         readings = []
 
-        # Generate data for past 5 days
-        for day_offset in range(5):
-            # Calculate base date (5 days ago + day_offset)
-            base_date = datetime.now() - timedelta(days=(4 - day_offset))
+        # Set end date to November 23, 2025
+        end_date = datetime(2025, 11, 23)
+        
+        # Generate data for past 90 days
+        for day_offset in range(90):
+            # Calculate base date (90 days ago from Nov 23 + day_offset)
+            base_date = end_date - timedelta(days=(89 - day_offset))
 
-            print(f"\n   Day {day_offset + 1}/5: "
-                  f"{base_date.strftime('%Y-%m-%d')}")
+            # Print progress every 10 days
+            if (day_offset + 1) % 10 == 0 or day_offset == 0:
+                print(f"\n   Day {day_offset + 1}/90: "
+                      f"{base_date.strftime('%Y-%m-%d')}")
 
             # Day readings (3 readings: 8AM, 12PM, 4PM)
             day_times = [
@@ -187,10 +192,12 @@ def seed_rtdb_sensor_data() -> None:
                 reading = generate_realistic_reading(
                     time, is_daytime=True, day_offset=day_offset)
                 readings.append(reading)
-                time_str = time.strftime('%I:%M %p')
-                print(f"      Day  {time_str} - pH: {reading['ph']}, "
-                      f"N: {reading['nitrogen']}, "
-                      f"Temp: {reading['temperature']}C")
+                # Only print details every 10 days
+                if (day_offset + 1) % 10 == 0 or day_offset == 0:
+                    time_str = time.strftime('%I:%M %p')
+                    print(f"      Day  {time_str} - pH: {reading['ph']}, "
+                          f"N: {reading['nitrogen']}, "
+                          f"Temp: {reading['temperature']}C")
 
             # Night readings (3 readings: 8PM, 12AM, 4AM)
             night_times = [
@@ -204,10 +211,12 @@ def seed_rtdb_sensor_data() -> None:
                 reading = generate_realistic_reading(
                     time, is_daytime=False, day_offset=day_offset)
                 readings.append(reading)
-                time_str = time.strftime('%I:%M %p')
-                print(f"      Night {time_str} - pH: {reading['ph']}, "
-                      f"N: {reading['nitrogen']}, "
-                      f"Temp: {reading['temperature']}C")
+                # Only print details every 10 days
+                if (day_offset + 1) % 10 == 0 or day_offset == 0:
+                    time_str = time.strftime('%I:%M %p')
+                    print(f"      Night {time_str} - pH: {reading['ph']}, "
+                          f"N: {reading['nitrogen']}, "
+                          f"Temp: {reading['temperature']}C")
 
         print(f"\nGenerated {len(readings)} sensor readings")
 
@@ -230,7 +239,7 @@ def seed_rtdb_sensor_data() -> None:
                 ref.child(timestamp_key).set(reading)
                 uploaded_count += 1
 
-                if uploaded_count % 6 == 0:  # Progress every day
+                if uploaded_count % 60 == 0:  # Progress every 10 days
                     print(f"   Uploaded {uploaded_count}/"
                           f"{len(readings)} readings...")
 
@@ -283,10 +292,10 @@ def seed_rtdb_sensor_data() -> None:
         print(f"\nRTDB URL: {RTDB_URL}")
         print("Path: sensorData/")
         print(f"Total readings: {uploaded_count}")
-        start_date = (datetime.now() - timedelta(days=4))
-        end_date = datetime.now()
+        start_date = datetime(2025, 11, 23) - timedelta(days=89)
+        final_date = datetime(2025, 11, 23)
         print(f"Date range: {start_date.strftime('%Y-%m-%d')} to "
-              f"{end_date.strftime('%Y-%m-%d')}")
+              f"{final_date.strftime('%Y-%m-%d')}")
         print("\nNext Steps:")
         print("   1. Start backend: python run.py")
         print(f"   2. Test API: http://localhost:5000/api/v1/sensors/"
